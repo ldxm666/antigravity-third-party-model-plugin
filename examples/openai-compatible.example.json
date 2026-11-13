@@ -1,0 +1,19 @@
+{
+  "name": "My compatible provider",
+  "kind": "openai",
+  "base_url": "https://your-provider.example/v1",
+  "api_key": "REPLACE_LOCALLY_DO_NOT_COMMIT",
+  "models": [
+    {
+      "id": "your-chat-model",
+      "display_name": "My chat model",
+      "upstream": "your-chat-model",
+      "ctx": 128000,
+      "max_out": 8192,
+      "reasoning_efforts": ["inherit"],
+      "reasoning_effort": "inherit",
+      "supports_images": null,
+      "thinking_budget": -1
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="210" viewBox="0 0 960 210">
+  <rect x="1" y="1" width="958" height="208" rx="20" fill="#f8fafc" stroke="#dbe3ee"/>
+  <rect x="42" y="48" width="6" height="114" rx="3" fill="#2563eb"/>
+  <text x="72" y="103" fill="#0f172a" font-family="Segoe UI,Arial,sans-serif" font-size="48" font-weight="700">AGY Bridge</text>
+  <text x="74" y="142" fill="#475569" font-family="Segoe UI,Arial,sans-serif" font-size="19">Native providers. Your models. Your reasoning presets.</text>
+  <rect x="750" y="64" width="160" height="35" rx="17" fill="#e7efff"/>
+  <text x="830" y="87" text-anchor="middle" fill="#1d4ed8" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="600">WINDOWS HUB</text>
+  <text x="830" y="132" text-anchor="middle" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="14">Open source / MIT</text>
+</svg>

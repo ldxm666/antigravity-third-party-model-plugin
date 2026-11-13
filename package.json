@@ -1,0 +1,27 @@
+{
+  "name": "antigravity-provider-bridge",
+  "version": "1.5.1",
+  "description": "Native provider settings and configurable reasoning menus for Antigravity Hub on Windows.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ldxm666/antigravity-provider-bridge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ldxm666/antigravity-provider-bridge/issues"
+  },
+  "scripts": {
+    "test": "node --test test/model-capabilities.test.mjs test/model-settings.test.mjs test/passthrough.test.mjs test/provider-timeouts.test.mjs && node core/selftest.mjs && node core/livetest.mjs",
+    "test:ls": "node core/e2e-ls.mjs --seconds 12",
+    "test:installer": "node test/installer.test.mjs",
+    "start": "node core/index.js",
+    "build:release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-release.ps1"
+  },
+  "devDependencies": {
+    "@electron/asar": "3.4.1"
+  }
+}

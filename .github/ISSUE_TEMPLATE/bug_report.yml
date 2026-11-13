@@ -1,0 +1,25 @@
+name: Bug report / 问题反馈
+description: A reproducible issue with redacted information / 请提供脱敏复现
+body:
+  - type: markdown
+    attributes:
+      value: "Do not upload API keys, config.json, account files or full captures. / 请勿上传密钥、配置、账号文件或完整抓包。"
+  - type: input
+    id: versions
+    attributes:
+      label: Versions / 版本
+      description: AGY Bridge version, Antigravity version, Windows version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and expected behavior / 复现与预期
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and redacted error / 实际表现和脱敏错误
+    validations:
+      required: true

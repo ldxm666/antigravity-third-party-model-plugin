@@ -1,0 +1,19 @@
+{
+  "name": "My Gemini provider",
+  "kind": "gemini",
+  "base_url": "https://generativelanguage.googleapis.com",
+  "api_key": "REPLACE_LOCALLY_DO_NOT_COMMIT",
+  "models": [
+    {
+      "id": "gemini-3.8-flash",
+      "display_name": "Gemini Flash",
+      "upstream": "gemini-3.8-flash",
+      "ctx": 1048576,
+      "max_out": 65536,
+      "reasoning_efforts": ["minimal", "low", "medium", "high"],
+      "reasoning_effort": "medium",
+      "supports_images": true,
+      "thinking_budget": -1
+    }
+  ]
+}

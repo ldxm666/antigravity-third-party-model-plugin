@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <title>agy-bridge · 第三方 API 配置</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body data-ds-theme="dark">
+
+  <div class="overlay">
+    <div class="mask"></div>
+
+    <div class="panel" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
+
+      <div class="nav-title" id="settings-title">设置</div>
+
+      <div class="header">
+        <div class="header-actions">
+          <span class="conn-pill" id="conn-pill" hidden>
+            <span class="dot"></span>
+            <span id="conn-text"></span>
+          </span>
+          <button type="button" class="close-btn" id="theme-toggle"
+                  aria-label="切换深色 / 浅色主题" title="切换主题">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"
+                 stroke="currentColor" stroke-width="1.3">
+              <path d="M13 9.4A5.4 5.4 0 0 1 6.6 3 5.6 5.6 0 1 0 13 9.4Z" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="设置分区">
+        <ul class="nav-list" id="nav-list">
+          <li>
+            <button type="button" class="nav-cell is-active" data-page="providers" aria-current="page">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                  <rect x="2" y="3" width="12" height="4.2" rx="1.2"></rect>
+                  <rect x="2" y="8.8" width="12" height="4.2" rx="1.2"></rect>
+                  <path d="M4.6 5.1h.01M4.6 10.9h.01" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <span class="nav-label">模型提供商</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="nav-cell" data-page="map">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                  <path d="M2.5 5.2h8.2M8.2 2.6l2.6 2.6-2.6 2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M13.5 10.8H5.3M7.8 8.2l-2.6 2.6 2.6 2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </span>
+              <span class="nav-label">模型映射</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="nav-cell" data-page="logs">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                  <path d="M3 4h10M3 8h10M3 12h6.5" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <span class="nav-label">运行日志</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="nav-cell" data-page="about">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                  <circle cx="8" cy="8" r="6"></circle>
+                  <path d="M8 7.2v4M8 4.9h.01" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <span class="nav-label">关于</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="options" id="options">
+
+        <section class="section page" id="page-providers" data-page="providers" aria-label="模型提供商">
+          <h2 class="section-title">模型提供商</h2>
+          <p class="section-intro">填入第三方提供商的 API 密钥，agy-bridge 会把 Antigravity 的请求转发过去。</p>
+          <div class="page-body" data-body="providers">
+            <div class="state-box">
+              <span class="spinner" aria-hidden="true"></span>
+              <span>正在读取配置…</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section page" id="page-map" data-page="map" aria-label="模型映射" hidden>
+          <h2 class="section-title">模型映射</h2>
+          <p class="section-intro">把 Antigravity 请求的模型 ID 指到具体提供商与上游模型；未映射的模型会回落到「默认模型」。</p>
+          <div class="page-body" data-body="map">
+            <div class="state-box">
+              <span class="spinner" aria-hidden="true"></span>
+              <span>正在读取映射…</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section page" id="page-logs" data-page="logs" aria-label="运行日志" hidden>
+          <h2 class="section-title">运行日志</h2>
+          <p class="section-intro">桥进程的实时日志，一次拉取最近 200 条。</p>
+          <div class="page-body" data-body="logs">
+            <div class="state-box">
+              <span class="spinner" aria-hidden="true"></span>
+              <span>正在读取日志…</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section page" id="page-about" data-page="about" aria-label="关于" hidden>
+          <h2 class="section-title">关于</h2>
+          <p class="section-intro">agy-bridge 的版本、端口与运行状态。</p>
+          <div class="page-body" data-body="about">
+            <div class="state-box">
+              <span class="spinner" aria-hidden="true"></span>
+              <span>正在读取运行状态…</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="dialog-root"></div>
+  <div id="toast-root" class="toast-root" role="status" aria-live="polite"></div>
+
+  <script>
+    // file:// 直接打开时浏览器会拦截 ES module（origin null），这里兜底提示，避免白屏。
+    window.setTimeout(function () {
+      if (document.body.dataset.booted) return;
+      var box = document.querySelector('[data-body="providers"]');
+      if (!box) return;
+      box.innerHTML =
+        '<div class="state-box is-error">' +
+        '<span class="state-title">脚本没有加载</span>' +
+        '<span>如果是以 file:// 直接打开本页，浏览器会拦截 ES module。用静态服务打开即可：</span>' +
+        '<code class="code-line">cd build/ui && python -m http.server 18925</code>' +
+        '<span>然后访问 http://127.0.0.1:18925/index.html —— 桥进程本身也托管这个目录。</span>' +
+        '</div>';
+    }, 1500);
+  </script>
+  <script type="module" src="./app.js"></script>
+</body>
+
+</html>
