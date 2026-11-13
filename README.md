@@ -6,7 +6,7 @@
 
   <p>
     <a href="https://github.com/ldxm666/antigravity-third-party-model-plugin/releases"><img alt="release" src="https://img.shields.io/github/v/release/ldxm666/antigravity-third-party-model-plugin?color=2563eb"></a>
-    <a href="#开发与验证"><img alt="261 local checks passed" src="https://img.shields.io/badge/local_checks-261_passed-15803d"></a>
+    <a href="#开发与验证"><img alt="275 local checks passed" src="https://img.shields.io/badge/local_checks-275_passed-15803d"></a>
     <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-2563eb">
     <img alt="Node.js 24.5 or newer" src="https://img.shields.io/badge/Node.js-%E2%89%A524.5-3c873a">
     <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-64748b"></a>
@@ -33,6 +33,8 @@
 | 确认当前请求卡在哪一段 | 聊天输入区的**真实传输状态**：供应商、等待上游、思考 / 正文、工具参数接收量 |
 
 本地开发中的 v1.5.6 参考了 [DeepSeek Harness 的流适配器](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/llm/llm-pi-ai/src/stream.ts) 和 [pi-ai 的 OpenAI 适配器](https://github.com/earendil-works/pi/blob/main/packages/ai/src/api/openai-completions.ts)，补齐思考字段识别和流终止检查。状态行只反映真实传输阶段，不会填充虚构思考或提前执行工具。上游在生成结束后才集中发数据时，本地桥无法提前拿到尚未返回的内容；该问题仍在排查，不能把本地流测试通过当作真实中转首字延迟已修复。正式下载包当前仍为 v1.5.4。
+
+本地 v1.5.7 修复第三方 401/403 被误判为 Google 登录过期的问题：提供商密钥、权限或账户池失败现在显示为第三方服务错误，不再触发 Google 重新登录。Google 自身的真实认证失败仍原样保留。旧版本若出现登录提示，应先核对错误是否来自第三方端点，避免把供应商账户池不可用当作 Google 会话过期。
 
 ## 看看实际效果
 
@@ -136,7 +138,7 @@ npm run test:installer   # Windows：独立临时 asar，不修改真实应用
 npm run build:release    # 生成 ZIP 与 SHA256SUMS.txt
 ```
 
-v1.5.6 本地通过 66 项单元 / HTTP / 界面逻辑检查、156 项协议检查和 39 项新配置回归（共 261 项），安装器隔离测试和 6 项隔离语言服务器启动检查另行通过。测试覆盖模型集合、思考字段、多选档位、容量约束、密钥保留、Google 控制面错误、生成超时、流中断、按会话隔离的进度及首段内容提前转发。真实桌面夹具中首段文字约 1 秒显示，工具参数进度约 1 秒出现；真实 CJMS Argon 长任务仍在 180 秒无响应后失败。这些检查不能证明真实供应商首字耗时已改善。
+v1.5.7 本地通过 80 项单元 / HTTP / 界面逻辑检查、156 项协议检查和 39 项新配置回归（共 275 项），安装器隔离测试另行通过；v1.5.6 的 6 项隔离语言服务器启动检查也已通过。新增测试覆盖三种第三方协议的 401/403 与 Google 认证隔离。真实桌面夹具中首段文字、工具进度约 1 秒显示；修复后的第三方 401/403 不再弹登录过期。真实 TNT 分组调整后短回复约 10 秒成功；CJMS Argon 长任务仍曾在 180 秒无响应后失败。不能把短回复或隔离检查等同于所有长任务性能已改善。
 
 真实桌面界面也做过多选保存、原生菜单和自动配置验证；截图中的容量来自受控示例端点，并不代表模型的官方规格。仓库附有 [可选 GitHub Actions 模板](docs/ci/README.md)，当前未启用远程 CI；不会把本地测试标成远程运行成功。
 

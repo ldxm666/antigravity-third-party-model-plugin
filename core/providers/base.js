@@ -179,8 +179,13 @@ export async function read_error_detail(res, limit = 1200) {
 }
 
 export function error_from_response(status, detail, url) {
-  const code = status >= 500 ? 502 : status === 429 ? 429 : status;
-  const label = status >= 500 ? 'upstream error' : 'upstream rejected the request';
+  // These are third-party credentials, never the user's Google session.
+  // Forwarding 401/403 as Cloud Code auth errors makes the native application
+  // render "session expired" and offer Google login for a provider failure.
+  const provider_auth_error = status === 401 || status === 403;
+  const code = provider_auth_error || status >= 500 ? 502 : status === 429 ? 429 : status;
+  const label = provider_auth_error ? '第三方提供商认证或账户池不可用（不是 Google 登录失效）'
+    : status >= 500 ? 'upstream error' : 'upstream rejected the request';
   const message = `${label} (HTTP ${status}) from ${url}${detail ? `: ${detail}` : ''}`;
   return new ProviderError(code, message, { http_status: status });
 }

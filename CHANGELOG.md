@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.7 — 2026-11-13 (local hotfix)
+
+- Fix an authentication-boundary bug: third-party HTTP 401/403 responses were forwarded as Google authentication failures, causing the native application to show a misleading session-expired / sign-in prompt.
+- Map third-party credential, permission and account-pool failures to upstream `502 UNAVAILABLE`, preserving the original provider HTTP status and error detail. Genuine Google authentication errors remain unchanged.
+- Add 14 regression checks covering all three adapters, streaming and complete replies, native inference HTTP and Google control-plane separation. Native 401/403 fixtures show a provider error, no expired-login prompt and a working Google user-status RPC.
+- After the user's TNT group change, one real native Flash / Medium short reply completed in about 10 seconds without a login-expired prompt. This does not establish long-task performance or resolve the separate CJMS latency issue.
+
 ## 1.5.6 — 2026-11-13 (local build; upstream latency unresolved)
 
 - Follow the DSH adapter's reasoning-field compatibility: forward `reasoning_text` and readable `reasoning_details` immediately, without duplicate aliases or encrypted blocks.

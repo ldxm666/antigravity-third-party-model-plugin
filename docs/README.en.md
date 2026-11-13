@@ -6,6 +6,8 @@
 
 Native third-party provider settings and configurable reasoning menus for **Antigravity Hub 2.31.2 on Windows x64**. This independent community project requires a working Google login and your own authorized provider API access. It does not fabricate identities, subscriptions or quotas.
 
+The local v1.5.7 hotfix corrects misleading session-expired prompts caused by third-party HTTP 401/403. Provider credential, permission or account-pool failures are reported as upstream service errors, while genuine Google authentication failures pass through unchanged. Native fixtures verify no sign-in prompt and a working Google user-status RPC after both provider errors.
+
 ## Features
 
 - Embedded provider settings inside the existing application settings panel.
