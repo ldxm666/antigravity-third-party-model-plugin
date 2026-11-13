@@ -123,12 +123,13 @@ function toInt(value, fallback) {
 
 // 桥的模型条目是 {id, display_name, upstream, ctx, max_out}；ctx/max_out 是整数
 function normalizeModel(m) {
+  const knownGemini = /^gemini-(?:3\.8-flash|3\.1-pro|4-argon)(?:-(?:preview|latest|low|medium|high))*$/.test(m?.upstream || m?.upstream_model || m?.id || '');
   return {
     id: String(m?.id ?? ''),
     display_name: String(m?.display_name ?? m?.displayName ?? ''),
     upstream: String(m?.upstream ?? m?.upstream_model ?? ''),
-    ctx: toInt(m?.ctx ?? m?.context_window ?? m?.max_tokens, 128000),
-    max_out: toInt(m?.max_out ?? m?.max_output ?? m?.maxOutputTokens, 8192),
+    ctx: toInt(m?.ctx ?? m?.context_window ?? m?.max_tokens, 1048576),
+    max_out: toInt(m?.max_out ?? m?.max_output ?? m?.maxOutputTokens, knownGemini ? 65536 : 131072),
     reasoning_effort: Object.hasOwn(EFFORT_LABEL, m?.reasoning_effort) ? m.reasoning_effort : 'inherit',
     thinking_budget: toInt(m?.thinking_budget, -1),
     reasoning_efforts: Array.isArray(m?.reasoning_efforts) ? [...m.reasoning_efforts] : ['inherit'],
@@ -142,8 +143,8 @@ function modelToWire(m) {
     id: String(m.id || '').trim(),
     display_name: String(m.display_name || '').trim() || String(m.id || '').trim(),
     upstream: String(m.upstream || '').trim() || String(m.id || '').trim(),
-    ctx: toInt(m.ctx, 128000),
-    max_out: toInt(m.max_out, 8192),
+    ctx: toInt(m.ctx, 1048576),
+    max_out: toInt(m.max_out, 131072),
     reasoning_effort: m.reasoning_effort || 'inherit',
     thinking_budget: toInt(m.thinking_budget, -1),
     reasoning_efforts: [...(m.reasoning_efforts || ['inherit'])],
@@ -385,7 +386,7 @@ function modelRowHtml(providerId, m, i) {
                aria-label="上游模型名" data-model="upstream" ${attrs} value="${esc(m.upstream)}"></label>
         <label class="model-field mg-ctx"><span>上下文窗口 · tokens</span><input class="input" type="text" inputmode="numeric" placeholder="128K"
                aria-label="上下文窗口" data-model="ctx" ${attrs} value="${esc(m.ctx)}"></label>
-        <label class="model-field mg-max"><span>最大输出 · tokens</span><input class="input" type="text" inputmode="numeric" placeholder="8192"
+        <label class="model-field mg-max"><span>最大输出 · tokens</span><input class="input" type="text" inputmode="numeric" placeholder="131072（128K）"
                aria-label="最大输出" data-model="max_out" ${attrs} value="${esc(m.max_out)}"></label>
         <label class="model-field mg-eff"><span>默认思考强度</span><select class="input select" aria-label="思考强度" data-model="reasoning_effort" ${attrs}>
           ${Object.entries(EFFORT_LABEL).filter(([value])=>m.reasoning_efforts.includes(value)).map(([value,label])=>`<option value="${value}"${m.reasoning_effort===value?' selected':''}>${label}</option>`).join('')}

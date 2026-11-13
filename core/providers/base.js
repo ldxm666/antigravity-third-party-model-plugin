@@ -102,6 +102,7 @@ export function make_timeout_controller(signal, first_ms, idle_ms) {
   return {
     signal: controller.signal,
     idle() {
+      if (done) return;
       arm(idle_ms, 'upstream stream idle timeout');
     },
     clear() {

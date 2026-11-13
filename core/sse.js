@@ -118,8 +118,9 @@ export function sse_data(text) {
  * with the close-delimited form.
  */
 export class SseWriter {
-  constructor(res) {
+  constructor(res, { detect_truncation = false } = {}) {
     this.res = res;
+    this.detect_truncation = detect_truncation;
     this.opened = false;
     this.bytes = 0;
     this.frames = 0;
@@ -128,12 +129,16 @@ export class SseWriter {
   open() {
     if (this.opened) return;
     this.opened = true;
-    this.res.useChunkedEncodingByDefault = false;
+    this.res.useChunkedEncodingByDefault = this.detect_truncation;
     this.res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      Connection: 'close',
+      Connection: this.detect_truncation ? 'keep-alive' : 'close',
       'X-Accel-Buffering': 'no',
+      // A close-delimited body cannot distinguish a failed response from EOF.
+      // For local inference, chunk framing makes a missing final chunk a real
+      // transport failure, instead of a successful empty model completion.
+      ...(this.detect_truncation ? { 'Transfer-Encoding': 'chunked' } : {}),
     });
     this.res.flushHeaders?.();
   }

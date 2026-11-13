@@ -206,8 +206,8 @@ export function merge_available_models(wire, config, aliases = new Map(), offici
     aliases.set(token, id);
     out.models[id] = {
       displayName: row.label,
-      maxTokens: meta?.ctx || 128000,
-      maxOutputTokens: meta?.max_out || 8192,
+      maxTokens: meta?.ctx || 1048576,
+      maxOutputTokens: meta?.max_out || 131072,
       tokenizerType: 'LLAMA_WITH_SPECIAL',
       model: token,
       apiProvider: 'API_PROVIDER_GOOGLE_GEMINI', modelProvider: 'MODEL_PROVIDER_GOOGLE',

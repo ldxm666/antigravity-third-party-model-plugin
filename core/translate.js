@@ -14,7 +14,8 @@
 //   { kind: 'finish',    reason }            // Gemini enum: STOP / MAX_TOKENS / ...
 //   { kind: 'usage',     prompt, candidates, total }
 
-export const DEFAULT_MAX_OUTPUT = 8192;
+import { DEFAULT_MAX_OUTPUT } from './model-schema.js';
+export { DEFAULT_MAX_OUTPUT };
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -404,6 +405,20 @@ export function to_openai_request(gen, opts = {}) {
 
   const effort = gen.reasoning_effort || reasoning_effort_from_gemini(gc.thinkingConfig || gc.thinking_config);
   if (effort) out.reasoning_effort = effort;
+  // Gemini's OpenAI compatibility endpoint omits thought summaries when only
+  // reasoning_effort is sent. Only the Google endpoint opts into its extension;
+  // generic OpenAI relays retain the standard field, as in the DSH adapter.
+  const thinking = gc.thinkingConfig || gc.thinking_config;
+  const include_thoughts = thinking?.includeThoughts ?? thinking?.include_thoughts;
+  if (opts.google_thinking === true && /(?:^|\/)gemini-/i.test(String(opts.model || '')) && typeof include_thoughts === 'boolean') {
+    const config = { include_thoughts };
+    if (effort === 'none') config.thinking_budget = 0;
+    else if (effort && /gemini-2(?:\.|-)/i.test(opts.model)) config.thinking_budget = { minimal: 1024, low: 1024, medium: 8192, high: 24576 }[effort];
+    else if (effort) config.thinking_level = ['xhigh', 'max'].includes(effort) ? 'high' : effort;
+    else if (Number.isFinite(thinking.thinkingBudget ?? thinking.thinking_budget)) config.thinking_budget = thinking.thinkingBudget ?? thinking.thinking_budget;
+    out.extra_body = { google: { thinking_config: config } };
+    delete out.reasoning_effort;
+  }
 
   const decls = collect_function_declarations(gen.tools);
   if (decls.length) {
@@ -591,11 +606,24 @@ export function finish_reason_from_anthropic(reason) {
   }
 }
 
+/** Provider aliases are alternatives, not fragments to duplicate in the UI. */
+export function openai_reasoning_text(message) {
+  for (const key of ['reasoning_content', 'reasoning', 'reasoning_text', 'thinking']) {
+    const value = message?.[key];
+    if (typeof value === 'string' && value) return value;
+    if (value && typeof value.text === 'string' && value.text) return value.text;
+  }
+  // OpenRouter's encrypted/signature blocks are not readable model thoughts.
+  return (Array.isArray(message?.reasoning_details) ? message.reasoning_details : [])
+    .filter(block => block?.type === 'reasoning.text' && typeof block.text === 'string')
+    .map(block => block.text).join('');
+}
+
 export function parts_from_openai_message(message) {
   const parts = [];
   if (!message || typeof message !== 'object') return parts;
-  const reasoning = message.reasoning_content ?? message.reasoning ?? message.thinking;
-  if (typeof reasoning === 'string' && reasoning) parts.push({ text: reasoning, thought: true });
+  const reasoning = openai_reasoning_text(message);
+  if (reasoning) parts.push({ text: reasoning, thought: true });
   const content = message.content;
   if (typeof content === 'string') {
     if (content) parts.push({ text: content });

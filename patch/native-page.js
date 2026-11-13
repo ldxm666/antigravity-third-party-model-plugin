@@ -13,7 +13,8 @@
   const model = m => {
     const levels = Array.isArray(m?.reasoning_efforts) ? Object.keys(efforts).filter(e => m.reasoning_efforts.includes(e)) : ['inherit'];
     const preferred = levels.includes(m?.reasoning_effort) ? m.reasoning_effort : levels.includes('medium') ? 'medium' : levels[0];
-    return { id: m?.id || '', display_name: m?.display_name || m?.displayName || '', upstream: m?.upstream || m?.id || '', ctx: m?.ctx || 128000, max_out: m?.max_out || 8192, reasoning_efforts: levels, reasoning_effort: preferred, thinking_budget: m?.thinking_budget ?? -1, supports_images: m?.supports_images ?? null, config_sources: { ...m?.config_sources } };
+    const knownGemini = /^gemini-(?:3\.8-flash|3\.1-pro|4-argon)(?:-(?:preview|latest|low|medium|high))*$/.test(m?.upstream || m?.id || '');
+    return { id: m?.id || '', display_name: m?.display_name || m?.displayName || '', upstream: m?.upstream || m?.id || '', ctx: m?.ctx || 1048576, max_out: m?.max_out || (knownGemini ? 65536 : 131072), reasoning_efforts: levels, reasoning_effort: preferred, thinking_budget: m?.thinking_budget ?? -1, supports_images: m?.supports_images ?? null, config_sources: { ...m?.config_sources } };
   };
   function installEffortSupport() {
     if (window.__agyEffortSupport?.version === 15) return true;
@@ -94,7 +95,7 @@
     return `<fieldset class="agy-model" data-model-index="${i}"><legend>模型 ${i + 1}</legend><div class="agy-grid">
       ${field('模型 ID', 'id', m.id, 'required spellcheck="false"')}${field('显示名称', 'display_name', m.display_name)}
       ${field('上游模型名', 'upstream', m.upstream, 'spellcheck="false"')}<button class="agy-action agy-remove" type="button" data-action="remove-model" data-index="${i}" aria-label="删除模型 ${i + 1}">删除模型</button>
-      ${field('上下文窗口 · tokens', 'ctx', m.ctx, 'inputmode="numeric" placeholder="128K 或 1M"')}${field('最大输出 · tokens', 'max_out', m.max_out, 'inputmode="numeric" placeholder="8192"')}
+      ${field('上下文窗口 · tokens', 'ctx', m.ctx, 'inputmode="numeric" placeholder="1048576"')}${field('最大输出 · tokens', 'max_out', m.max_out, 'inputmode="numeric" placeholder="131072（128K）"')}
       <fieldset class="agy-wide agy-effort-options"><legend>聊天中可选的思考强度 · 可多选</legend><div>${Object.entries(efforts).map(([value, label]) => `<label><input type="checkbox" data-effort-choice="${value}" ${m.reasoning_efforts.includes(value) ? 'checked' : ''}><span>${esc(label)}</span></label>`).join('')}</div></fieldset>
       <label class="agy-field"><span>默认思考强度</span><select data-field="reasoning_effort">${options(Object.fromEntries(Object.entries(efforts).filter(([e]) => m.reasoning_efforts.includes(e))), m.reasoning_effort)}</select></label>
       ${field('思考预算 · tokens', 'thinking_budget', m.thinking_budget >= 0 ? m.thinking_budget : '', `inputmode="numeric" placeholder="例如 4096" ${!m.reasoning_efforts.includes('budget') ? 'disabled' : ''}`)}
@@ -323,6 +324,43 @@
     else if (!nav && !S.requested) S.active = false;
   }
   let policyTimer, policyAttempts = 0;
+  let progressTimer, progressPending = false, progressStopped = false;
+  let progressNode;
+  function clearProgress() { progressNode?.remove(); progressNode = null; }
+  async function updateProgress() {
+    if (progressStopped || progressPending) return;
+    const page = location.pathname;
+    const cascade = /^\/c\/([0-9a-f-]{36})$/i.exec(page)?.[1];
+    const stop = document.querySelector('button[aria-label="停止执行"]');
+    if (!cascade || !stop) { clearProgress(); return; }
+    progressPending = true;
+    try {
+      const result = await api('/api/providers/progress');
+      if (progressStopped || location.pathname !== page || !document.querySelector('button[aria-label="停止执行"]')) { clearProgress(); return; }
+      const row = result.requests?.filter(r => r.cascade_id === cascade).sort((a, b) => b.started_at - a.started_at)[0];
+      if (!row) { clearProgress(); return; }
+      const card = document.querySelector('[contenteditable=true]')?.closest('.surface-composer-card');
+      if (!card) { clearProgress(); return; }
+      if (!progressNode?.isConnected) {
+        progressNode = document.createElement('div'); progressNode.dataset.testid = 'agy-bridge-request-progress';
+        progressNode.className = 'text-xs text-muted-foreground px-2 py-1';
+        // Ordinary flow inside the native composer, never a floating window.
+        card.prepend(progressNode);
+      }
+      const duration = Math.floor(Math.max(0, row.elapsed_ms) / 1000);
+      let phase = ({ waiting_headers: '等待上游响应', waiting_content: '已连接上游，等待有效内容',
+        tool_arguments: `正在接收工具参数 · ${Number(row.argument_chars).toLocaleString()} 字符`,
+        forward_thought: '正在接收思考内容', forward_text: '正在接收回复', forward_tool_call: '工具参数已完整返回' })[row.phase] || '请求处理中';
+      if (row.status === 'failed') phase = `上游响应失败 · HTTP ${row.error_code || 502}`;
+      else if (row.status === 'cancelled') phase = '请求已取消';
+      else if (row.status === 'complete') phase = '本轮响应已完成，原生执行器处理中';
+      const text = `${row.provider_name} · ${row.model} · ${phase} · ${duration} 秒`;
+      if (progressNode.textContent !== text) progressNode.textContent = text;
+      progressNode.title = `实际接收 ${Number(row.bytes).toLocaleString()} 字节 / ${Number(row.events).toLocaleString()} 个流事件。此状态由本地桥提供，不是模型回复。`;
+    } catch { clearProgress(); /* Older bridges have no progress endpoint. */ }
+    finally { progressPending = false; }
+  }
+  progressTimer = setInterval(updateProgress, 1000);
   function installRequestPolicy() {
     try { runtime(); }
     catch (err) {
@@ -333,5 +371,5 @@
   installRequestPolicy();
   const observer = new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(update); } });
   observer.observe(document.body, { childList: true, subtree: true }); update();
-  window.__agyProviderUi = { open, refreshModels, restore, dispose() { observer.disconnect(); clearTimeout(policyTimer); window.__agyNativeRequests?.dispose(); S.active = false; restore(); style.remove(); document.querySelector('[data-testid=agy-bridge-provider-settings]')?.parentElement.remove(); document.querySelector('[data-testid=agy-bridge-manage-models]')?.remove(); delete window.__agyProviderUi; }, get mounted() { return !!S.root?.isConnected; } };
+  window.__agyProviderUi = { open, refreshModels, restore, updateProgress, dispose() { progressStopped = true; clearInterval(progressTimer); clearProgress(); observer.disconnect(); clearTimeout(policyTimer); window.__agyNativeRequests?.dispose(); S.active = false; restore(); style.remove(); document.querySelector('[data-testid=agy-bridge-provider-settings]')?.parentElement.remove(); document.querySelector('[data-testid=agy-bridge-manage-models]')?.remove(); delete window.__agyProviderUi; }, get mounted() { return !!S.root?.isConnected; } };
 })();

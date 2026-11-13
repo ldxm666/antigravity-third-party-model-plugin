@@ -46,6 +46,7 @@ import { adapter_for, list_provider_models, probe_provider } from './providers/i
 import { apply_model_settings } from './model-settings.js';
 import { configure_models } from './model-capabilities.js';
 import { model_capacity_error } from './model-schema.js';
+import { create_request_progress } from './request-progress.js';
 
 const BODY_LIMIT = 64 * 1024 * 1024;
 const API_PREFIX = '/api/';
@@ -330,7 +331,7 @@ async function handle_generate(req, res, state, method) {
   const adapter = adapter_for(resolved.provider.kind);
   let model_meta = resolved.provider.models.find(m => m.id === resolved.agy_model || m.upstream === resolved.upstream);
   if (picker && model_meta) model_meta = { ...model_meta, reasoning_effort: picker.effort };
-  try { gen = apply_model_settings(gen, model_meta, resolved.provider.kind); }
+  try { gen = apply_model_settings(gen, model_meta, resolved.provider.kind, { use_saved_output: !!picker && gen.envelope && gen.request_id.startsWith('agent/') }); }
   catch (err) { send_json(res, err.status || 400, gemini_error(err.status || 400, err.message), trace_header(trace)); return; }
   const abort = new AbortController();
   res.on('close', () => {
@@ -363,6 +364,17 @@ async function handle_generate(req, res, state, method) {
   logger.info(stream ? 'relay_stream' : 'relay_generate', base_meta);
 
   const started = Date.now();
+  const timings = {};
+  const progress = state.progress.start({ trace, request_id: gen.request_id,
+    provider_name: resolved.provider.name, model: resolved.upstream, effort: base_meta.reasoning_effort });
+  res.on('close', () => { if (!res.writableEnded) progress.finish('cancelled'); });
+  const mark = (phase, extra = {}) => {
+    progress.note(phase, extra);
+    if (timings[phase] !== undefined) return;
+    timings[phase] = Date.now() - started;
+    logger.info('relay_progress', { trace, provider: resolved.provider.id, upstream_model: resolved.upstream, phase, ms: timings[phase], ...extra });
+  };
+  ctx.on_progress = (phase, extra = {}) => mark(phase, extra);
   try {
     if (!stream) {
       const result = await adapter.complete(resolved.provider, gen, ctx);
@@ -372,17 +384,23 @@ async function handle_generate(req, res, state, method) {
         usage: result.usage,
         model_version: resolved.upstream,
       });
-      logger.info('relay_done', { ...base_meta, ms: Date.now() - started, parts: result.parts.length });
+      logger.info('relay_done', { ...base_meta, ms: Date.now() - started, parts: result.parts.length, timings });
+      progress.finish('complete');
       send_json(res, 200, envelope(response), trace_header(trace));
       return;
     }
 
     res.setHeader('X-Agy-Trace-Id', trace);
-    const writer = new SseWriter(res);
+    const writer = new SseWriter(res, { detect_truncation: true });
     let wrote = false;
     try {
       for await (const delta of adapter.stream(resolved.provider, gen, ctx)) {
         if (res.destroyed) break;
+        if (delta?.kind === 'text' || delta?.kind === 'thought' || delta?.kind === 'tool_call') mark('forward_' + delta.kind);
+        if (delta?.kind === 'gemini_part') {
+          if (delta.part?.text) mark(delta.part.thought ? 'forward_thought' : 'forward_text');
+          if (delta.part?.functionCall) mark('forward_tool_call');
+        }
         if (delta && delta.kind === 'done') {
           // Only ever forwarded when the upstream itself sent it.
           writer.write('data: [DONE]\n\n');
@@ -394,28 +412,36 @@ async function handle_generate(req, res, state, method) {
         writer.send(envelope(chunk));
         wrote = true;
       }
-      logger.info('relay_done', { ...base_meta, ms: Date.now() - started, frames: writer.frames });
+      logger.info('relay_done', { ...base_meta, ms: Date.now() - started, frames: writer.frames, timings });
+      progress.finish(res.destroyed ? 'cancelled' : 'complete');
       writer.end();
     } catch (err) {
       const payload = error_payload(err);
+      progress.finish(abort.signal.aborted ? 'cancelled' : 'failed', payload.error.code || 502);
       logger.error('relay_stream_failed', {
         ...base_meta,
         ms: Date.now() - started,
+        timings,
         error: err && err.message ? err.message : String(err),
       });
       if (!wrote && !writer.opened) {
         send_json(res, payload.error.code || 502, payload, trace_header(trace));
       } else {
         writer.write(sse_frame(payload));
-        writer.end();
+        // Native LS ignores in-band SSE errors on an otherwise clean EOF.
+        // Flush the diagnostic frame then abort the chunked body, so its API
+        // retry policy sees the failure instead of starting output recovery.
+        res.write('', () => res.destroy());
       }
     }
     return;
   } catch (err) {
     const payload = error_payload(err);
+    progress.finish(abort.signal.aborted ? 'cancelled' : 'failed', payload.error.code || 502);
     logger.error(stream ? 'relay_stream_failed' : 'relay_generate_failed', {
       ...base_meta,
       ms: Date.now() - started,
+      timings,
       error: err && err.message ? err.message : String(err),
     });
     if (!res.headersSent) send_json(res, payload.error.code || 502, payload, trace_header(trace));
@@ -576,6 +602,13 @@ async function handle_api(req, res, state, url) {
           official_models: new Set(state.official_models.values()).size,
           custom_models: state.model_aliases.size },
       });
+      return;
+    }
+
+    // This fixed route is already allowed by the Hub IPC proxy. It exposes
+    // transport counts only, scoped by cascade ID in the native UI.
+    if (route === 'providers/progress' && req.method === 'GET') {
+      send(200, { requests: state.progress.snapshot() });
       return;
     }
 
@@ -906,6 +939,7 @@ export async function start_server(options = {}) {
     config_path: cfg_path,
     started_at: Date.now(),
     request_count: 0,
+    progress: create_request_progress(),
     last_settings_model: '',
     model_aliases: new Map(),
     official_models: new Map(),

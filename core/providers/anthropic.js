@@ -41,13 +41,14 @@ export async function* stream(provider, gen, ctx) {
   const payload = to_anthropic_request(gen, { model: ctx.upstream_model, stream: true });
   const { res, guard } = await request(url, {
     method: 'POST',
-    headers: headers(provider),
+    headers: { ...headers(provider), accept: 'text/event-stream', 'accept-encoding': 'identity' },
     body: JSON.stringify(payload),
     signal: ctx.signal,
     first_ms: ctx.timeouts.request_ms,
     idle_ms: ctx.timeouts.stream_idle_ms,
   });
   guard.idle();
+  ctx.on_progress?.('upstream_headers', { status: res.status, content_type: res.headers.get('content-type'), content_encoding: res.headers.get('content-encoding') });
 
   if (!res.ok) {
     const detail = await read_error_detail(res);
@@ -120,7 +121,11 @@ export async function* stream(provider, gen, ctx) {
         out.push({ kind: 'thought', text: delta.thinking });
       } else if (delta.type === 'input_json_delta') {
         const slot = tool_blocks.get(Number(obj.index) || 0);
-        if (slot && typeof delta.partial_json === 'string') slot.json += delta.partial_json;
+        if (slot && typeof delta.partial_json === 'string') {
+          guard.idle();
+          ctx.on_progress?.('upstream_tool_fragment', { argument_chars: delta.partial_json.length });
+          slot.json += delta.partial_json;
+        }
       }
       return out;
     }
@@ -146,11 +151,13 @@ export async function* stream(provider, gen, ctx) {
 
   try {
     for await (const chunk of res.body) {
-      guard.idle();
+      ctx.on_progress?.('upstream_bytes', { bytes: chunk.length });
       parser.push(chunk);
       while (events.length) {
-        for (const delta of handle(events.shift())) yield delta;
+        ctx.on_progress?.('upstream_event');
+        for (const delta of handle(events.shift())) { guard.idle(); yield delta; }
       }
+      if (finished) break;
     }
     parser.end();
     while (events.length) {

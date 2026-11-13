@@ -1,4 +1,6 @@
 // Shared configuration rules. Explicit effort lists are authoritative.
+export const DEFAULT_CONTEXT_WINDOW = 1048576;
+export const DEFAULT_MAX_OUTPUT = 131072;
 export const EFFORT_KEYS = ['inherit', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'budget'];
 export function model_capacity_error(models = []) {
   const invalid = models.find(m => Number(m.max_out) >= Number(m.ctx));

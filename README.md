@@ -6,7 +6,7 @@
 
   <p>
     <a href="https://github.com/ldxm666/antigravity-third-party-model-plugin/releases"><img alt="release" src="https://img.shields.io/github/v/release/ldxm666/antigravity-third-party-model-plugin?color=2563eb"></a>
-    <a href="#开发与验证"><img alt="240 local checks passed" src="https://img.shields.io/badge/local_checks-240_passed-15803d"></a>
+    <a href="#开发与验证"><img alt="261 local checks passed" src="https://img.shields.io/badge/local_checks-261_passed-15803d"></a>
     <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-2563eb">
     <img alt="Node.js 24.5 or newer" src="https://img.shields.io/badge/Node.js-%E2%89%A524.5-3c873a">
     <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-64748b"></a>
@@ -30,6 +30,9 @@
 | 在当前聊天切换强度 | 原生模型选择器的 **二级菜单** |
 | 查询上下文、输出、图片与思考能力 | **自动配置所有模型**，检查来源后保存 |
 | 添加、删除或调整模型 | **保存后热刷新**，日常修改无需重启应用 |
+| 确认当前请求卡在哪一段 | 聊天输入区的**真实传输状态**：供应商、等待上游、思考 / 正文、工具参数接收量 |
+
+本地开发中的 v1.5.6 参考了 [DeepSeek Harness 的流适配器](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/llm/llm-pi-ai/src/stream.ts) 和 [pi-ai 的 OpenAI 适配器](https://github.com/earendil-works/pi/blob/main/packages/ai/src/api/openai-completions.ts)，补齐思考字段识别和流终止检查。状态行只反映真实传输阶段，不会填充虚构思考或提前执行工具。上游在生成结束后才集中发数据时，本地桥无法提前拿到尚未返回的内容；该问题仍在排查，不能把本地流测试通过当作真实中转首字延迟已修复。正式下载包当前仍为 v1.5.4。
 
 ## 看看实际效果
 
@@ -99,11 +102,15 @@ Get-FileHash .\antigravity-third-party-model-plugin-v1.5.4-windows-x64.zip -Algo
 | Anthropic | Messages | 文本、工具、thinking；按模型区分预算与自适应思考 |
 | Gemini | GenerateContent | 流式与非流式、工具、图片与 thinking 参数 |
 
-上下文按文本估算，超过本地配置限制会报错；输出按请求值、模型最大输出和剩余上下文取较小值。**填写更大的容量不会扩大上游模型能力。** 代理站对参数的支持可能不同，应以其实际响应为准。
+上下文按文本估算，超过本地配置限制会报错。原生第三方聊天以保存的最大输出为准，再受剩余上下文限制；直接调用 API 时也尊重请求中更小的显式上限。不会再让原生执行器遗留的 8192 默认值压低手动设置。自动配置采用端点信息、已核实能力表并显示来源，已有明确值不会在加载时被通用预填值覆盖。**填写更大的容量不会扩大上游模型能力。** 代理站对参数的支持可能不同，应以其实际响应为准。
 
 **最大输出必须严格小于上下文窗口**，为输入、历史消息和智能体指令保留空间。两者填成相同值会导致原生智能体在发送请求前终止；v1.5.3 在界面和保存 API 中均会拦截。自动配置遇到矛盾的端点容量会保留原始值并提示，需核对后再保存。
 
 从 v1.5.4 起，第三方模型的 API 失败会结束当前执行并显示原生错误和手动重试入口，避免一次上游超时后连续隐藏重试、界面始终显示“工作中”。这项策略不修改 Google 模型的重试行为，也不修改输出截断后的原生续写策略。生成首响应默认期限为 180 秒，流空闲期限为 120 秒；模型列表正常并不保证生成端点及时响应，插件也不能保证上游恢复。Gemini 原生协议同时保留思考签名与工具调用 ID。
+
+v1.5.6 保留 JSON 完整回复回退和 `[DONE]` 及时结束，补齐 `reasoning_text` 与可读的 `reasoning_details`。通用 OpenAI 中转使用标准 `reasoning_effort`，仅 Google 自身兼容端点启用 Google 的思考摘要扩展。工具参数必须完整、合法且流正常终止后才交给执行器；空预算截断和提前断流明确报错。日志只记录响应头、首字节、首段内容及转发时间等阶段，不记录生成正文。
+
+这不保证供应商首字速度：若日志只有 `relay_stream` 而没有 `upstream_headers`，上游尚未返回响应头；有 `upstream_bytes` 但没有 `forward_text` / `forward_thought` / `forward_tool_call` 时，需核对上游是否只发心跳或未完成的工具参数。聊天输入区会显示真实传输阶段。OpenAI 路由部分响应后失败的原生夹具现已验证：约 1 秒显示错误、仅 1 次请求，不再将干净 EOF 误判为可恢复的空回复。输出截断后的原生续写等其他恢复策略仍保留，不能宣称所有类型的重试都被关闭。
 
 ## 它如何工作
 
@@ -129,7 +136,7 @@ npm run test:installer   # Windows：独立临时 asar，不修改真实应用
 npm run build:release    # 生成 ZIP 与 SHA256SUMS.txt
 ```
 
-v1.5.4 本地通过 45 项单元 / HTTP 集成检查、156 项协议检查和 39 项新配置回归，安装器隔离测试另行通过。测试覆盖模型集合、非标准思考档位、配置迁移、容量约束、端点优先级、草稿不落盘、密钥保留、Google 控制面错误、生成超时、原生错误策略和 Gemini 签名保留，不需要真实账号或提供商密钥。
+v1.5.6 本地通过 66 项单元 / HTTP / 界面逻辑检查、156 项协议检查和 39 项新配置回归（共 261 项），安装器隔离测试和 6 项隔离语言服务器启动检查另行通过。测试覆盖模型集合、思考字段、多选档位、容量约束、密钥保留、Google 控制面错误、生成超时、流中断、按会话隔离的进度及首段内容提前转发。真实桌面夹具中首段文字约 1 秒显示，工具参数进度约 1 秒出现；真实 CJMS Argon 长任务仍在 180 秒无响应后失败。这些检查不能证明真实供应商首字耗时已改善。
 
 真实桌面界面也做过多选保存、原生菜单和自动配置验证；截图中的容量来自受控示例端点，并不代表模型的官方规格。仓库附有 [可选 GitHub Actions 模板](docs/ci/README.md)，当前未启用远程 CI；不会把本地测试标成远程运行成功。
 

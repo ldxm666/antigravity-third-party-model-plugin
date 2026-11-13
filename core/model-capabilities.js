@@ -31,10 +31,14 @@ export function read_model_metadata(raw, kind = 'openai', source = 'endpoint:lis
 // Exact known families / documented aliases only. Do not invent capacities for
 // future names returned by a relay. Endpoint values always override these.
 // https://aistudio.google.com/docs/models/gemini-3.8-flash
+// https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-argon
 // https://ai.google.dev/gemini-api/docs/gemini-3
 // https://platform.claude.com/docs/en/about-claude/models/overview
 // https://developers.openai.com/api/docs/models/gpt-5.2
 const CATALOGUE = [
+  // Direct streaming segment limit. Longer Argon decodes require upstream
+  // continuation support; an explicit saved output target remains user-owned.
+  { pattern: /^gemini-4-argon(?:-(?:preview|latest|low|medium|high))?$/, key: 'gemini-4-argon', ctx: 1048576, max_out: 65536, supports_images: true, reasoning_efforts: ['low', 'medium', 'high'] },
   { pattern: /^gpt-5\.2(?:-\d{4}-\d{2}-\d{2})?$/, key: 'gpt-5.2', ctx: 400000, max_out: 128000, supports_images: true, reasoning_efforts: ['none', 'low', 'medium', 'high', 'xhigh'] },
   { pattern: /^claude-sonnet-4[.-]6(?:-\d{8})?$/, key: 'claude-sonnet-4.6', ctx: 1000000, max_out: 64000, supports_images: true, reasoning_efforts: ['none', 'low', 'medium', 'high'] },
   { pattern: /^claude-opus-4[.-]6(?:-\d{8})?$/, key: 'claude-opus-4.6', ctx: 1000000, max_out: 128000, supports_images: true, reasoning_efforts: ['none', 'low', 'medium', 'high', 'max'] },

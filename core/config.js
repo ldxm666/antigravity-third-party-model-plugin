@@ -7,9 +7,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
-import { EFFORT_KEYS, model_efforts, default_effort } from './model-schema.js';
+import { EFFORT_KEYS, model_efforts, default_effort, DEFAULT_CONTEXT_WINDOW, DEFAULT_MAX_OUTPUT } from './model-schema.js';
+import { catalogue_model } from './model-capabilities.js';
 
-export const APP_VERSION = '1.5.4';
+export const APP_VERSION = '1.5.6';
 export const DEFAULT_PORT = 18925;
 export const PROVIDER_KINDS = ['openai', 'anthropic', 'gemini'];
 export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'];
@@ -162,12 +163,13 @@ function normalize_model_entry(raw, fallback_id) {
   const id = as_str(m.id, fallback_id).trim() || fallback_id;
   const levels = model_efforts({ ...m, id });
   const configured = EFFORT_KEYS.includes(m.reasoning_effort) ? m.reasoning_effort : 'inherit';
+  const known = catalogue_model(as_str(m.upstream, id));
   return {
     id,
     display_name: as_str(m.display_name, as_str(m.displayName, id)).trim() || id,
     upstream: as_str(m.upstream, as_str(m.upstream_model, id)).trim() || id,
-    ctx: as_int(m.ctx, as_int(m.max_tokens, 128000, 1, 100_000_000), 1, 100_000_000),
-    max_out: as_int(m.max_out, as_int(m.maxOutputTokens, 8192, 1, 10_000_000), 1, 10_000_000),
+    ctx: as_int(m.ctx, as_int(m.max_tokens, known.ctx || DEFAULT_CONTEXT_WINDOW, 1, 100_000_000), 1, 100_000_000),
+    max_out: as_int(m.max_out, as_int(m.maxOutputTokens, known.max_out || DEFAULT_MAX_OUTPUT, 1, 10_000_000), 1, 10_000_000),
     reasoning_efforts: levels,
     reasoning_effort: default_effort({ reasoning_effort: configured }, levels),
     thinking_budget: as_int(m.thinking_budget, -1, -1, 1_000_000),

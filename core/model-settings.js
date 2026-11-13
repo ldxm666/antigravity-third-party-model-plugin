@@ -1,7 +1,7 @@
 import { count_request_tokens } from './translate.js';
 
 /** Apply the saved per-model limits before translating any provider request. */
-export function apply_model_settings(gen, meta, kind) {
+export function apply_model_settings(gen, meta, kind, options = {}) {
   if (!meta) return gen;
   const gc = { ...gen.generation_config };
   const input = count_request_tokens(gen);
@@ -12,7 +12,7 @@ export function apply_model_settings(gen, meta, kind) {
   }
   const requested = Number(gc.maxOutputTokens ?? gc.max_output_tokens);
   gc.maxOutputTokens = Math.max(1, Math.min(meta.max_out, meta.ctx - input,
-    Number.isFinite(requested) && requested > 0 ? Math.trunc(requested) : meta.max_out));
+    !options.use_saved_output && Number.isFinite(requested) && requested > 0 ? Math.trunc(requested) : meta.max_out));
   delete gc.max_output_tokens;
   const effort = meta.reasoning_effort || 'inherit';
   const out = { ...gen, generation_config: gc };
@@ -28,6 +28,7 @@ export function apply_model_settings(gen, meta, kind) {
   if (kind === 'openai') {
     out.reasoning_effort = effort === 'budget'
       ? (budget === 0 ? 'none' : budget <= 2048 ? 'low' : budget <= 8192 ? 'medium' : 'high') : effort;
+    if (typeof include_thoughts === 'boolean') gc.thinkingConfig = { includeThoughts: include_thoughts };
   } else if (kind === 'anthropic') {
     const model = meta.upstream || meta.id;
     const modern = /claude-(?:opus|sonnet)-(?:4[.-](?:[6-9]|\d{2,})|[5-9])/i.test(model);

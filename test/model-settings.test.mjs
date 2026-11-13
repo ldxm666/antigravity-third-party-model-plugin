@@ -10,6 +10,20 @@ import { normalize_provider } from '../core/config.js';
 
 const gen = () => normalize_request({ model: 'test', request: { contents: [{ role: 'user', parts: [{ text: 'Hello' }] }], generationConfig: { temperature: .4, topP: .8, maxOutputTokens: 10000, thinkingConfig: { thinkingBudget: 30000 } } } });
 const meta = (extra = {}) => ({ id: 'test', upstream: 'test', ctx: 128000, max_out: 4096, reasoning_effort: 'high', thinking_budget: -1, ...extra });
+
+test('native saved output targets are not reduced by a stale 8192 request default', () => {
+  const g=gen();g.generation_config.maxOutputTokens=8192;
+  const m=meta({ctx:1048576,max_out:131072});
+  assert.equal(apply_model_settings(g,m,'openai',{use_saved_output:true}).generation_config.maxOutputTokens,131072);
+  assert.equal(apply_model_settings(g,m,'openai').generation_config.maxOutputTokens,8192);
+  assert.equal(g.generation_config.maxOutputTokens,8192);
+});
+test('official defaults and explicit manual output values stay distinct', () => {
+  const p=normalize_provider({id:'fixture',name:'Fixture',models:[{id:'gemini-3.8-flash'},{id:'gemini-4-argon-high'},{id:'custom-unknown-model'},{id:'manual-fixture',upstream:'gemini-3.8-flash',max_out:50000,ctx:200000}]});
+  assert.equal(p.models[0].max_out,65536);assert.equal(p.models[1].max_out,65536);
+  assert.equal(p.models[2].max_out,131072);assert.equal(p.models[2].ctx,1048576);
+  assert.equal(p.models[3].max_out,50000);assert.equal(p.models[3].ctx,200000);
+});
 test('saved limits override the incoming request without mutating it', () => {
   const original = gen(); const result = apply_model_settings(original, meta(), 'openai');
   const wire = to_openai_request(result, { model: 'test' });

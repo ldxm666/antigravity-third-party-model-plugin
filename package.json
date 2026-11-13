@@ -1,6 +1,6 @@
 {
   "name": "antigravity-third-party-model-plugin",
-  "version": "1.5.4",
+  "version": "1.5.6",
   "description": "Antigravity 第三方模型插件 / Antigravity Third-Party Model Plugin — native providers and configurable reasoning for Windows.",
   "type": "module",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "url": "https://github.com/ldxm666/antigravity-third-party-model-plugin/issues"
   },
   "scripts": {
-    "test": "node --test test/model-capabilities.test.mjs test/model-settings.test.mjs test/passthrough.test.mjs test/provider-timeouts.test.mjs test/native-request-policy.test.mjs test/gemini-parts.test.mjs && node core/selftest.mjs && node core/livetest.mjs",
+    "test": "node --test test/model-capabilities.test.mjs test/model-settings.test.mjs test/passthrough.test.mjs test/provider-timeouts.test.mjs test/native-request-policy.test.mjs test/gemini-parts.test.mjs test/openai-streaming.test.mjs test/streaming-http.test.mjs test/request-progress.test.mjs test/native-progress.test.mjs && node core/selftest.mjs && node core/livetest.mjs",
     "test:ls": "node core/e2e-ls.mjs --seconds 12",
     "test:installer": "node test/installer.test.mjs",
     "start": "node core/index.js",

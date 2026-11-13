@@ -72,13 +72,14 @@ export async function* stream(provider, gen, ctx) {
   const payload = to_gemini_request(gen, { max_output_tokens: ctx.max_output });
   const { res, guard } = await request(url, {
     method: 'POST',
-    headers: headers(provider),
+    headers: { ...headers(provider), accept: 'text/event-stream', 'accept-encoding': 'identity' },
     body: JSON.stringify(payload),
     signal: ctx.signal,
     first_ms: ctx.timeouts.request_ms,
     idle_ms: ctx.timeouts.stream_idle_ms,
   });
   guard.idle();
+  ctx.on_progress?.('upstream_headers', { status: res.status, content_type: res.headers.get('content-type'), content_encoding: res.headers.get('content-encoding') });
 
   if (!res.ok) {
     const detail = await read_error_detail(res);
@@ -101,10 +102,12 @@ export async function* stream(provider, gen, ctx) {
   const parser = create_sse_parser((evt) => events.push(evt));
   let saw_finish = false;
   let usage = null;
+  let terminal = false;
 
   const handle = (evt) => {
     const out = [];
     if (evt.data === '[DONE]') {
+      terminal = true;
       // Forward the terminator only because the upstream actually sent one.
       out.push({ kind: 'done' });
       return out;
@@ -117,6 +120,7 @@ export async function* stream(provider, gen, ctx) {
       return out;
     }
     for (const delta of deltas_from_gemini_chunk(obj)) {
+      if (delta.kind === 'gemini_part') guard.idle();
       if (delta.kind === 'finish') saw_finish = true;
       if (delta.kind === 'usage') usage = delta;
       else out.push(delta);
@@ -126,11 +130,13 @@ export async function* stream(provider, gen, ctx) {
 
   try {
     for await (const chunk of res.body) {
-      guard.idle();
+      ctx.on_progress?.('upstream_bytes', { bytes: chunk.length });
       parser.push(chunk);
       while (events.length) {
+        ctx.on_progress?.('upstream_event');
         for (const delta of handle(events.shift())) yield delta;
       }
+      if (terminal) break;
     }
     parser.end();
     while (events.length) {

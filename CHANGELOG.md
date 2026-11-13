@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.5.6 — 2026-11-13 (local build; upstream latency unresolved)
+
+- Follow the DSH adapter's reasoning-field compatibility: forward `reasoning_text` and readable `reasoning_details` immediately, without duplicate aliases or encrypted blocks.
+- Keep standard `reasoning_effort` on generic OpenAI-compatible relays. Only Google's own compatibility endpoint uses Google's thought-summary extension; a Gemini model name alone does not establish protocol support.
+- Treat premature EOF and thought-only terminal replies as failures. Do not execute tool arguments from an unterminated response. Abort a failed chunk-framed HTTP stream instead of presenting clean EOF to the native executor.
+- Add an inline status inside the native composer, scoped to the current cascade: waiting for upstream headers, receiving thoughts/text, and incremental tool-argument counts. This is transport telemetry, not generated model text. It does not reduce upstream time to first byte.
+- Preserve explicitly configured output ceilings and reasoning selections. The controlled native UI fixture displayed text in about one second; a DSH-inspired real-provider request still took about 128 seconds to its first bytes. Provider-side buffering remains unresolved.
+- Native desktop validation: early text in 1.012 seconds; incremental tool progress in 1.006 seconds; a partial-stream failure ended with one request and a visible native error in 1.016 seconds. A real CJMS Argon task still failed after 180 seconds without headers or bytes; do not interpret fixture success as provider latency improvement.
+
+## 1.5.5 — 2026-11-13
+
+- Forward OpenAI-compatible JSON/full-message replies and terminate streams at `[DONE]` even when the relay keeps the socket open. Preserve early text/thought forwarding and reject incomplete tool JSON or empty output-budget exhaustion.
+- Preserve Gemini thought-summary preferences and selected reasoning levels through Google's OpenAI compatibility extension, without conflicting reasoning controls.
+- Honor explicitly saved native-agent output ceilings instead of a stale 8192-token request default; preserve existing capacities and use known official catalogue values before generic new-model prefill.
+- Record first upstream headers/bytes/content and forwarding phases without logging generated text. Keep semantic stream inactivity bounded even when a relay sends only heartbeat comments.
+- Add regression and HTTP streaming coverage. Provider response latency and native partial-output recovery remain separate limitations; this release does not promise instant first tokens.
+
 ## 1.5.4 — 2026-11-13
 
 - Show native errors and stop hidden API retries for third-party models; leave Google retry behavior and native output-truncation recovery unchanged. Preserve protobuf message types, caller objects and native client bindings.
