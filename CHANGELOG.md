@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.3 — 2026-11-13
+
+- Reject maximum output equal to or larger than the context window in both settings interfaces and the provider-save API. This prevents a native planner startup failure before inference.
+- Validate a detached model candidate before updating provider fields, preserving names, secrets, mappings and the configuration file on a rejected save.
+- Keep inconsistent discovery metadata visible with a warning instead of silently capping output to the entire context window.
+- Add boundary and persistence regression tests and document slow generation versus a stalled stream in Chinese and English.
+
 ## 1.5.2 — 2026-11-13
 
 Branding and documentation release.

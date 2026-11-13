@@ -131,7 +131,8 @@
     for (const m of d.models) {
       m.id = m.id.trim(); if (!m.id || ids.has(m.id)) throw new Error('模型 ID 不能为空或重复'); ids.add(m.id);
       m.ctx = number(m.ctx, 0); m.max_out = number(m.max_out, 0); m.thinking_budget = number(m.thinking_budget, -1);
-      if (m.ctx < 1 || m.ctx > 100000000 || m.max_out < 1 || m.max_out > 10000000 || m.max_out > m.ctx) throw new Error('请填写有效的容量；最大输出不能大于上下文窗口');
+      if (m.ctx < 1 || m.ctx > 100000000 || m.max_out < 1 || m.max_out > 10000000) throw new Error('请填写有效的上下文窗口和最大输出容量');
+      if (m.max_out >= m.ctx) throw new Error('最大输出必须小于上下文窗口，为输入、历史消息和智能体指令预留空间。');
       if (!m.reasoning_efforts.length) throw new Error('每个模型至少选择一个可用思考档位，可选择“跟随应用”。');
       if (!m.reasoning_efforts.includes(m.reasoning_effort)) throw new Error('默认思考强度必须是已勾选的档位。');
       if (m.reasoning_efforts.includes('budget') && (m.thinking_budget < 0 || m.thinking_budget > 1000000)) throw new Error('思考预算必须在 0 到 1000000 tokens 之间');

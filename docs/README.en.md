@@ -29,6 +29,10 @@ The installed files live under `%LOCALAPPDATA%\Programs\agy-bridge`. Provider co
 
 Day-to-day model changes refresh without an application restart. Updating bridge code may require running `restart-bridge.cmd`. Application updates can break the version-specific native integration; check compatibility before patching again.
 
+**Maximum output must be strictly smaller than the context window**, leaving space for input, conversation history and agent instructions. Equal values can stop the native planner before any provider request is sent. Since v1.5.3, both settings interfaces and the save API reject that combination without changing saved settings. Discovery preserves inconsistent endpoint values in the draft and warns you to review them.
+
+Long-running tasks may involve several provider calls. A successful model-list request does not measure generation speed; compare a short reply and check redacted request durations before diagnosing a stuck bridge.
+
 For a custom application path, pass `-AsarPath` to `install/oneclick.ps1`. For rollback, use `uninstall-keep-config.cmd`; custom paths must be restored explicitly first. Read the [full tutorial](QUICKSTART.md), [security policy](../SECURITY.md) and [architecture](ARCHITECTURE.md).
 
 ## Develop

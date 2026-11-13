@@ -25,7 +25,10 @@ try {
   if (Test-Path -LiteralPath $zip) { throw 'Release archive already exists. Choose a fresh OutputDir to avoid overwriting a published artifact.' }
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   [IO.Compression.ZipFile]::CreateFromDirectory($work,$zip,[IO.Compression.CompressionLevel]::Optimal,$false)
-  $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+  $hashStream = [IO.File]::OpenRead($zip)
+  $sha256 = [Security.Cryptography.SHA256]::Create()
+  try { $hash = [BitConverter]::ToString($sha256.ComputeHash($hashStream)).Replace('-','').ToLowerInvariant() }
+  finally { $hashStream.Dispose(); $sha256.Dispose() }
   [IO.File]::WriteAllText((Join-Path $OutputDir 'SHA256SUMS.txt'),($hash + '  ' + [IO.Path]::GetFileName($zip) + "`n"),(New-Object Text.UTF8Encoding($false)))
   [PSCustomObject]@{ archive=$zip; sha256=$hash; bytes=(Get-Item -LiteralPath $zip).Length } | ConvertTo-Json
 } finally {

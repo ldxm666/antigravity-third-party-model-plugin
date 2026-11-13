@@ -76,6 +76,21 @@ test('auto configuration prioritizes model details, then list, then table; never
     assert.ok(peak <= 4); assert.ok(requests.every(r => r.method === 'GET' && r.auth === 'Bearer test-only'));
   } finally { await new Promise(r => upstream.close(r)); }
 });
+test('discovery warns about inconsistent endpoint capacities without fabricating limits', async () => {
+  const upstream = http.createServer((req, res) => { res.writeHead(404); res.end('{}'); });
+  await new Promise(r => upstream.listen(0, '127.0.0.1', r));
+  const provider = normalize_provider({ base_url: `http://127.0.0.1:${upstream.address().port}`, models: [{ id: 'equal-limit' }, { id: 'excess-limit' }] });
+  const rows = [{ id: 'equal-limit', ctx: 64000, max_out: 64000 }, { id: 'excess-limit', ctx: 64000, max_out: 128000 }];
+  const before = JSON.stringify(provider);
+  try {
+    const result = await configure_models(provider, { connect_ms: 1000 }, { ok: true, models: rows });
+    assert.deepEqual(result.models.map(m => [m.ctx, m.max_out]), [[64000, 64000], [64000, 128000]]);
+    assert.equal(result.warnings.length, 2);
+    assert.ok(result.warnings.every(w => w.includes('最大输出必须小于上下文窗口')));
+    assert.equal(JSON.stringify(provider), before, 'discovery changes only the returned draft');
+  } finally { await new Promise(r => upstream.close(r)); }
+});
+
 test('configure preview updates only draft and does not overwrite saved secrets or add returned models', async () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'agy-capabilities-')); process.env.AGY_BRIDGE_HOME = home;
   const { start_server } = await import('../core/server.js');

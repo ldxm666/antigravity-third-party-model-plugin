@@ -53,6 +53,42 @@ test('normalization keeps per-model settings with safe defaults for existing con
   assert.equal(p.models[0].reasoning_effort, 'low'); assert.equal(p.models[0].thinking_budget, 3000);
   assert.equal(p.models[1].reasoning_effort, 'inherit'); assert.equal(p.models[1].thinking_budget, -1);
 });
+test('capacity saves reject a full output window before changing memory, mappings or disk', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'agy-capacity-'));
+  process.env.AGY_BRIDGE_HOME = home;
+  const { start_server } = await import('../core/server.js');
+  const bridge = await start_server({ port: 0, config: { providers: [], log_level: 'error' } });
+  const call = async (route, method, body) => {
+    const res = await fetch(`http://127.0.0.1:${bridge.port}/api/${route}`, {
+      method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+    });
+    return { status: res.status, data: await res.json() };
+  };
+  try {
+    const valid = { name: 'Capacity fixture', kind: 'openai', base_url: 'http://127.0.0.1:1/v1', api_key: 'fixture-secret', models: [meta({ ctx: 1048576, max_out: 256000 })] };
+    const created = await call('providers', 'POST', valid);
+    assert.equal(created.status, 200);
+    assert.equal(created.data.provider.models[0].max_out, 256000, 'valid large output limits must not be arbitrarily capped');
+    const beforeDisk = fs.readFileSync(bridge.state.config_path, 'utf8');
+    const beforeMemory = JSON.stringify(bridge.state.config);
+    for (const max_out of [1048576, 1048577]) {
+      const models = [meta({ ctx: 1048576, max_out })];
+      const rejectedCreate = await call('providers', 'POST', { ...valid, models });
+      assert.equal(rejectedCreate.status, 400);
+      assert.equal(rejectedCreate.data.error, 'invalid_model_capacity');
+      assert.match(rejectedCreate.data.detail, /最大输出必须小于上下文窗口/);
+      const rejectedPatch = await call(`providers/${created.data.provider.id}`, 'PATCH', { name: 'Must not change', api_key: 'must-not-persist', models });
+      assert.equal(rejectedPatch.status, 400);
+      assert.equal(rejectedPatch.data.error, 'invalid_model_capacity');
+      assert.equal(JSON.stringify(bridge.state.config), beforeMemory, 'a rejected save must leave names, keys, models and mappings intact');
+      assert.equal(fs.readFileSync(bridge.state.config_path, 'utf8'), beforeDisk, 'a rejected save must not touch the configuration file');
+    }
+    const validPatch = await call(`providers/${created.data.provider.id}`, 'PATCH', { models: [meta({ ctx: 1048576, max_out: 65536 })] });
+    assert.equal(validPatch.status, 200);
+    assert.equal(JSON.parse(fs.readFileSync(bridge.state.config_path)).providers[0].models[0].max_out, 65536);
+  } finally { await bridge.close(); fs.rmSync(home, { recursive: true, force: true }); }
+});
+
 test('API save -> disk -> generation forwards saved effort and limits, and rejects oversized context', async () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'agy-model-settings-'));
   process.env.AGY_BRIDGE_HOME = home;

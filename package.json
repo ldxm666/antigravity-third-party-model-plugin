@@ -1,6 +1,6 @@
 {
   "name": "antigravity-third-party-model-plugin",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Antigravity 第三方模型插件 / Antigravity Third-Party Model Plugin — native providers and configurable reasoning for Windows.",
   "type": "module",
   "license": "MIT",

@@ -23,6 +23,7 @@ function setMode(next) {
 
 function errText(data, res) {
   if (data && typeof data === 'object') {
+    if (typeof data.detail === 'string') return data.detail;
     if (typeof data.error === 'string') return data.error;
     if (typeof data.message === 'string') return data.message;
     if (typeof data.raw === 'string' && data.raw.trim()) return data.raw.trim().slice(0, 300);

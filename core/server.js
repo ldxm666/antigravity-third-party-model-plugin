@@ -45,6 +45,7 @@ import { capture_request } from './capture.js';
 import { adapter_for, list_provider_models, probe_provider } from './providers/index.js';
 import { apply_model_settings } from './model-settings.js';
 import { configure_models } from './model-capabilities.js';
+import { model_capacity_error } from './model-schema.js';
 
 const BODY_LIMIT = 64 * 1024 * 1024;
 const API_PREFIX = '/api/';
@@ -591,6 +592,11 @@ async function handle_api(req, res, state, url) {
           send(400, { ok: false, error: 'base_url_required' });
           return;
         }
+        const capacity_error = model_capacity_error(provider.models);
+        if (capacity_error) {
+          send(400, { ok: false, error: 'invalid_model_capacity', detail: capacity_error });
+          return;
+        }
         state.config.providers.push(provider);
         // The model picker is driven by model_map, so a provider's own models
         // must land there immediately or the LS never offers them.
@@ -638,6 +644,13 @@ async function handle_api(req, res, state, url) {
 
       if (parts.length === 2 && req.method === 'PATCH') {
         const body = await read_json(req);
+        // Validate a detached candidate before touching live settings or secrets.
+        const candidate = normalize_provider({ ...provider, models: Array.isArray(body.models) ? body.models : provider.models }, null);
+        const capacity_error = model_capacity_error(candidate.models);
+        if (capacity_error) {
+          send(400, { ok: false, error: 'invalid_model_capacity', detail: capacity_error });
+          return;
+        }
         if (typeof body.name === 'string') provider.name = body.name.trim() || provider.name;
         if (typeof body.kind === 'string' && ['openai', 'anthropic', 'gemini'].includes(body.kind)) provider.kind = body.kind;
         if (typeof body.base_url === 'string') provider.base_url = body.base_url.trim();

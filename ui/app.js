@@ -988,7 +988,7 @@ function validateProviderDraft(d) {
     if (!id) return '模型 ID 不能为空。';
     if (seen.has(id)) return '模型 ID 不能重复。';
     if (toInt(m.ctx, 0) <= 0 || toInt(m.max_out, 0) <= 0) return '上下文窗口和最大输出必须为正数。';
-    if (toInt(m.max_out, 0) > toInt(m.ctx, 0)) return '最大输出不能大于上下文窗口。';
+    if (toInt(m.max_out, 0) >= toInt(m.ctx, 0)) return '最大输出必须小于上下文窗口，为输入、历史消息和智能体指令预留空间。';
     if (!m.reasoning_efforts?.length) return '每个模型至少选择一个思考档位。';
     if (!m.reasoning_efforts.includes(m.reasoning_effort)) return '默认强度必须来自已选档位。';
     if (m.reasoning_efforts.includes('budget') && toInt(m.thinking_budget, -1) < 0) return '请输入思考预算（tokens）。';

@@ -1,7 +1,7 @@
 // Read-only model discovery. Endpoint facts win over the conservative fallback
 // catalogue; unknown fields keep the user's current value. Never sends prompts.
 import { auth_headers, normalize_base } from './providers/base.js';
-import { clean_efforts, default_effort } from './model-schema.js';
+import { clean_efforts, default_effort, model_capacity_error } from './model-schema.js';
 
 const FIELDS = ['ctx', 'max_out', 'supports_images', 'reasoning_efforts'];
 function positive(...values) { for (const v of values) { const n = Number(v); if (Number.isInteger(n) && n > 0 && n <= 100000000) return n; } }
@@ -85,7 +85,7 @@ export async function configure_models(provider, timeouts, list = { ok: false, m
     }));
   } finally { clearTimeout(timer); }
   let matched = 0, endpoint_count = 0, table_count = 0;
-  const unknown = [];
+  const unknown = [], warnings = list.ok ? [] : ['模型列表接口不可用；已尝试单模型详情与能力表。'];
   const models = provider.models.map((model, i) => {
     const fallback = catalogue_model(model.upstream || model.id);
     const listed = rows.find(row => row.id === model.upstream || row.id === model.id) || {};
@@ -99,12 +99,15 @@ export async function configure_models(provider, timeouts, list = { ok: false, m
     if (any) matched++; else unknown.push(model.id);
     if (Object.values(out.config_sources).some(s => s.startsWith('endpoint:'))) endpoint_count++;
     if (Object.values(out.config_sources).some(s => s.startsWith('table:'))) table_count++;
-    if (out.max_out > out.ctx) { out.max_out = out.ctx; out.config_sources.max_out += ' (capped to context)'; }
+    // Keep endpoint facts visible in the draft; never turn an inconsistent
+    // limit into an apparently valid output ceiling equal to the whole context.
+    const capacity_error = model_capacity_error([out]);
+    if (capacity_error) warnings.push(capacity_error);
     out.reasoning_effort = default_effort(out);
     if (out.reasoning_efforts?.includes('budget') && out.thinking_budget < 0) out.thinking_budget = Math.max(0, Math.min(4096, out.max_out - 1));
     return out;
   });
   return { ok: true, models, configured: matched, endpoint_count, table_count, unknown, latency_ms: Date.now() - started,
     detail: `已检查 ${models.length} 个模型：端点 ${endpoint_count} 个，能力表 ${table_count} 个；${unknown.length} 个未识别并保留原值。`,
-    warnings: list.ok ? [] : ['模型列表接口不可用；已尝试单模型详情与能力表。'] };
+    warnings };
 }

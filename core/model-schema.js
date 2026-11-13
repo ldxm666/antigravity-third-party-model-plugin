@@ -1,5 +1,9 @@
 // Shared configuration rules. Explicit effort lists are authoritative.
 export const EFFORT_KEYS = ['inherit', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'budget'];
+export function model_capacity_error(models = []) {
+  const invalid = models.find(m => Number(m.max_out) >= Number(m.ctx));
+  return invalid ? `模型 ${invalid.id}：最大输出必须小于上下文窗口，为输入、历史消息和智能体指令预留空间。` : null;
+}
 export function clean_efforts(value) {
   return Array.isArray(value) ? EFFORT_KEYS.filter(k => value.includes(k)) : [];
 }
