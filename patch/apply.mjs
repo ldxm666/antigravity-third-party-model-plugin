@@ -115,7 +115,7 @@ fs.writeFileSync(mainJs, src, 'utf8');
 say('      inserted tray item id=' + MARKER);
 const preloadJs = path.join(extractDir, 'dist', 'preload.js');
 const preload = stripIntegration(fs.readFileSync(preloadJs, 'utf8'));
-const pageSource = fs.readFileSync(path.join(patchDir, 'native-page.js'), 'utf8');
+const pageSource = fs.readFileSync(path.join(patchDir, 'native-request-policy.js'), 'utf8') + '\n' + fs.readFileSync(path.join(patchDir, 'native-page.js'), 'utf8');
 const preloadFragment = fs.readFileSync(path.join(patchDir, 'hub-preload.cjs'), 'utf8').replace('/*AGY_PAGE_SOURCE*/', JSON.stringify(pageSource));
 fs.writeFileSync(preloadJs, preload + '\n/* agy-bridge-host:start */\n' + preloadFragment + '\n/* agy-bridge-host:end */\n');
 const additions = [['host-main.cjs', 'agyBridgeMain.cjs']];

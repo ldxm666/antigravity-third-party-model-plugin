@@ -33,6 +33,8 @@ Day-to-day model changes refresh without an application restart. Updating bridge
 
 Long-running tasks may involve several provider calls. A successful model-list request does not measure generation speed; compare a short reply and check redacted request durations before diagnosing a stuck bridge.
 
+Since v1.5.4, API failures for third-party models end the current execution with the native error and manual retry controls instead of silently repeating a failed request. Google retry behavior and native output-truncation recovery remain unchanged. Default limits are 180 seconds for the first upstream response and 120 seconds of stream inactivity. This bounds failed attempts; it cannot make an unresponsive provider complete a task. The native Gemini adapter also preserves thought signatures and function-call IDs, and bounds JSON fallback bodies after early headers.
+
 For a custom application path, pass `-AsarPath` to `install/oneclick.ps1`. For rollback, use `uninstall-keep-config.cmd`; custom paths must be restored explicitly first. Read the [full tutorial](QUICKSTART.md), [security policy](../SECURITY.md) and [architecture](ARCHITECTURE.md).
 
 ## Develop

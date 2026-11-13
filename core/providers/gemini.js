@@ -48,16 +48,9 @@ function deltas_from_gemini_chunk(chunk) {
     const parts = candidate && candidate.content && Array.isArray(candidate.content.parts) ? candidate.content.parts : [];
     for (const part of parts) {
       if (!part || typeof part !== 'object') continue;
-      if (typeof part.text === 'string' && part.text) {
-        out.push(part.thought ? { kind: 'thought', text: part.text } : { kind: 'text', text: part.text });
-      } else if (part.functionCall) {
-        out.push({
-          kind: 'tool_call',
-          id: part.functionCall.id,
-          name: part.functionCall.name || 'unknown_function',
-          args: part.functionCall.args && typeof part.functionCall.args === 'object' ? part.functionCall.args : {},
-        });
-      }
+      // Signatures belong to their original Part, including signature-only
+      // chunks. Rebuilding text/functionCall objects loses tool-loop state.
+      out.push({ kind: 'gemini_part', part });
     }
     if (candidate && candidate.finishReason) {
       out.push({ kind: 'finish', reason: candidate.finishReason });
@@ -98,19 +91,7 @@ export async function* stream(provider, gen, ctx) {
   // Some relays ignore ?alt=sse and answer with a JSON array (the non-SSE
   // streaming form). Handle both instead of hanging on an empty parser.
   if (content_type.includes('application/json')) {
-    guard.clear();
-    let text = '';
-    try {
-      text = await res.text();
-    } catch (err) {
-      throw new ProviderError(502, `failed reading upstream body: ${err && err.message ? err.message : err}`);
-    }
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      throw new ProviderError(502, `upstream returned invalid JSON: ${text.slice(0, 300)}`);
-    }
+    const parsed = await read_json_response(res, guard, url);
     const chunks = Array.isArray(parsed) ? parsed : [parsed];
     for (const chunk of chunks) for (const delta of deltas_from_gemini_chunk(chunk)) yield delta;
     return;
@@ -184,16 +165,7 @@ export async function complete(provider, gen, ctx) {
   if (candidate && candidate.content && Array.isArray(candidate.content.parts)) {
     for (const part of candidate.content.parts) {
       if (!part || typeof part !== 'object') continue;
-      if (typeof part.text === 'string') {
-        parts.push(part.thought ? { text: part.text, thought: true } : { text: part.text });
-      } else if (part.functionCall) {
-        parts.push({
-          functionCall: {
-            name: part.functionCall.name || 'unknown_function',
-            args: part.functionCall.args && typeof part.functionCall.args === 'object' ? part.functionCall.args : {},
-          },
-        });
-      }
+      parts.push(part);
     }
     finish_reason = candidate.finishReason || 'STOP';
   }

@@ -55,6 +55,7 @@
       queue.push(n.sibling, n.child);
     }
     if (!store || !client || !services?.core.cloudCodeService?.getAvailableModels) throw new Error('当前应用版本的模型刷新接口未找到');
+    window.__agyNativeRequests?.install(client, () => store.getState().userStatus?.cascadeModelConfigData?.clientModelConfigs || []);
     return { store, client, services };
   }
   async function refreshModels() {
@@ -321,7 +322,16 @@
     if ((S.requested || S.active && !S.root) && nav) void mount();
     else if (!nav && !S.requested) S.active = false;
   }
+  let policyTimer, policyAttempts = 0;
+  function installRequestPolicy() {
+    try { runtime(); }
+    catch (err) {
+      if (++policyAttempts < 60) policyTimer = setTimeout(installRequestPolicy, 500);
+      else console.warn('[agy-bridge] native request policy unavailable:', err.message);
+    }
+  }
+  installRequestPolicy();
   const observer = new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(update); } });
   observer.observe(document.body, { childList: true, subtree: true }); update();
-  window.__agyProviderUi = { open, refreshModels, restore, dispose() { observer.disconnect(); S.active = false; restore(); style.remove(); document.querySelector('[data-testid=agy-bridge-provider-settings]')?.parentElement.remove(); document.querySelector('[data-testid=agy-bridge-manage-models]')?.remove(); delete window.__agyProviderUi; }, get mounted() { return !!S.root?.isConnected; } };
+  window.__agyProviderUi = { open, refreshModels, restore, dispose() { observer.disconnect(); clearTimeout(policyTimer); window.__agyNativeRequests?.dispose(); S.active = false; restore(); style.remove(); document.querySelector('[data-testid=agy-bridge-provider-settings]')?.parentElement.remove(); document.querySelector('[data-testid=agy-bridge-manage-models]')?.remove(); delete window.__agyProviderUi; }, get mounted() { return !!S.root?.isConnected; } };
 })();

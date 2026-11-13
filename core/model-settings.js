@@ -17,6 +17,7 @@ export function apply_model_settings(gen, meta, kind) {
   const effort = meta.reasoning_effort || 'inherit';
   const out = { ...gen, generation_config: gc };
   if (effort === 'inherit') return out;
+  const include_thoughts = (gc.thinkingConfig || gc.thinking_config)?.includeThoughts;
   delete gc.thinkingConfig; delete gc.thinking_config;
   const budgets = { none: 0, minimal: 1024, low: 2048, medium: 4096, high: 8192, xhigh: 16384, max: 32768 };
   let budget = effort === 'budget' ? meta.thinking_budget : budgets[effort];
@@ -51,6 +52,7 @@ export function apply_model_settings(gen, meta, kind) {
     gc.thinkingConfig = effort === 'budget' || effort === 'none' || older
       ? { thinkingBudget: budget }
       : { thinkingLevel: ['xhigh', 'max'].includes(effort) ? 'high' : effort };
+    if (typeof include_thoughts === 'boolean') gc.thinkingConfig.includeThoughts = include_thoughts;
   }
   return out;
 }

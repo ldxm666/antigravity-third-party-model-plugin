@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.4 — 2026-11-13
+
+- Show native errors and stop hidden API retries for third-party models; leave Google retry behavior and native output-truncation recovery unchanged. Preserve protobuf message types, caller objects and native client bindings.
+- Preserve original Gemini parts, including thought signatures, signature-only chunks and function-call IDs, across streaming and complete responses.
+- Keep the timeout active while consuming a Gemini JSON stream fallback, and retain an explicit thought-summary preference when overriding reasoning levels.
+- Add seven regression checks, an isolated native failure-path check and a live HTML file-generation acceptance check. Document that an unresponsive upstream remains an external limitation.
+
 ## 1.5.3 — 2026-11-13
 
 - Reject maximum output equal to or larger than the context window in both settings interfaces and the provider-save API. This prevents a native planner startup failure before inference.

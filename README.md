@@ -6,7 +6,7 @@
 
   <p>
     <a href="https://github.com/ldxm666/antigravity-third-party-model-plugin/releases"><img alt="release" src="https://img.shields.io/github/v/release/ldxm666/antigravity-third-party-model-plugin?color=2563eb"></a>
-    <a href="#开发与验证"><img alt="233 local checks passed" src="https://img.shields.io/badge/local_checks-233_passed-15803d"></a>
+    <a href="#开发与验证"><img alt="240 local checks passed" src="https://img.shields.io/badge/local_checks-240_passed-15803d"></a>
     <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-2563eb">
     <img alt="Node.js 24.5 or newer" src="https://img.shields.io/badge/Node.js-%E2%89%A524.5-3c873a">
     <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-64748b"></a>
@@ -64,12 +64,12 @@
 
 ### 1. 下载一键包
 
-从 [Releases](https://github.com/ldxm666/antigravity-third-party-model-plugin/releases/latest) 下载 **`antigravity-third-party-model-plugin-v1.5.2-windows-x64.zip`**，完整解压到普通目录。不要在 ZIP 预览中直接运行。
+从 [Releases](https://github.com/ldxm666/antigravity-third-party-model-plugin/releases/latest) 下载 **`antigravity-third-party-model-plugin-v1.5.4-windows-x64.zip`**，完整解压到普通目录。不要在 ZIP 预览中直接运行。
 
 可选校验：将 ZIP 与同版本 `SHA256SUMS.txt` 放在一起，在 PowerShell 执行：
 
 ```powershell
-Get-FileHash .\antigravity-third-party-model-plugin-v1.5.2-windows-x64.zip -Algorithm SHA256
+Get-FileHash .\antigravity-third-party-model-plugin-v1.5.4-windows-x64.zip -Algorithm SHA256
 ```
 
 ### 2. 双击安装
@@ -103,6 +103,8 @@ Get-FileHash .\antigravity-third-party-model-plugin-v1.5.2-windows-x64.zip -Algo
 
 **最大输出必须严格小于上下文窗口**，为输入、历史消息和智能体指令保留空间。两者填成相同值会导致原生智能体在发送请求前终止；v1.5.3 在界面和保存 API 中均会拦截。自动配置遇到矛盾的端点容量会保留原始值并提示，需核对后再保存。
 
+从 v1.5.4 起，第三方模型的 API 失败会结束当前执行并显示原生错误和手动重试入口，避免一次上游超时后连续隐藏重试、界面始终显示“工作中”。这项策略不修改 Google 模型的重试行为，也不修改输出截断后的原生续写策略。生成首响应默认期限为 180 秒，流空闲期限为 120 秒；模型列表正常并不保证生成端点及时响应，插件也不能保证上游恢复。Gemini 原生协议同时保留思考签名与工具调用 ID。
+
 ## 它如何工作
 
 <img src="docs/assets/architecture.svg" alt="原生应用连接本地桥；真实 Google 控制面与第三方模型推理分别路由" width="860">
@@ -127,7 +129,7 @@ npm run test:installer   # Windows：独立临时 asar，不修改真实应用
 npm run build:release    # 生成 ZIP 与 SHA256SUMS.txt
 ```
 
-v1.5.3 本地通过 38 项单元 / HTTP 集成检查、156 项协议检查和 39 项新配置回归，安装器隔离测试另行通过。测试覆盖模型集合、非标准思考档位、配置迁移、容量约束、端点优先级、草稿不落盘、密钥保留、Google 控制面错误及生成超时，不需要真实账号或提供商密钥。
+v1.5.4 本地通过 45 项单元 / HTTP 集成检查、156 项协议检查和 39 项新配置回归，安装器隔离测试另行通过。测试覆盖模型集合、非标准思考档位、配置迁移、容量约束、端点优先级、草稿不落盘、密钥保留、Google 控制面错误、生成超时、原生错误策略和 Gemini 签名保留，不需要真实账号或提供商密钥。
 
 真实桌面界面也做过多选保存、原生菜单和自动配置验证；截图中的容量来自受控示例端点，并不代表模型的官方规格。仓库附有 [可选 GitHub Actions 模板](docs/ci/README.md)，当前未启用远程 CI；不会把本地测试标成远程运行成功。
 

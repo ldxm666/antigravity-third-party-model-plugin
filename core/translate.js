@@ -10,6 +10,7 @@
 //   { kind: 'text',      text }
 //   { kind: 'thought',   text }
 //   { kind: 'tool_call', id, name, args }
+//   { kind: 'gemini_part', part }           // Preserve native signatures and IDs.
 //   { kind: 'finish',    reason }            // Gemini enum: STOP / MAX_TOKENS / ...
 //   { kind: 'usage',     prompt, candidates, total }
 
@@ -652,6 +653,12 @@ export function chunk_for_delta(delta, model_version) {
   if (!delta || typeof delta !== 'object') return null;
   const version = model_version || 'agy-bridge';
   switch (delta.kind) {
+    case 'gemini_part':
+      if (!delta.part || typeof delta.part !== 'object' || Array.isArray(delta.part)) return null;
+      return {
+        candidates: [{ content: { role: 'model', parts: [delta.part] }, index: 0 }],
+        modelVersion: version,
+      };
     case 'text':
       if (!delta.text) return null;
       return {
