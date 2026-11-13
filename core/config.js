@@ -10,7 +10,7 @@ import crypto from 'node:crypto';
 import { EFFORT_KEYS, model_efforts, default_effort, DEFAULT_CONTEXT_WINDOW, DEFAULT_MAX_OUTPUT } from './model-schema.js';
 import { catalogue_model } from './model-capabilities.js';
 
-export const APP_VERSION = '1.5.7';
+export const APP_VERSION = '1.0.0';
 export const DEFAULT_PORT = 18925;
 export const PROVIDER_KINDS = ['openai', 'anthropic', 'gemini'];
 export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'];

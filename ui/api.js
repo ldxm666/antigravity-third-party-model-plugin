@@ -90,7 +90,7 @@ const MOCK_MODELS = {
 };
 
 const mock = {
-  version: '0.4.2',
+  version: '1.0.0',
   port: 18925,
   active_provider_id: 'prv_relay',
   default_model: 'MODEL_PLACEHOLDER_M528',

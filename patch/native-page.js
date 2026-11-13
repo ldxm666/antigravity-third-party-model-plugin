@@ -84,7 +84,9 @@
   async function load(select = S.id) {
     const data = await api('/api/state');
     const [major, minor] = String(data.version || '0.0').split('.').map(Number);
-    if (!(major > 1 || major === 1 && minor >= 5)) { S.data = null; throw new Error('后台桥仍为 ' + (data.version || '旧版本') + '。请运行项目目录中的 restart-bridge.cmd 重启本地桥，然后点击“重试”；不需要退出 Antigravity。'); }
+    // Public versioning starts at 1.0.0; negotiate the settings API separately.
+    const compatible = data.native_settings_api === 1 || major > 1 || major === 1 && minor >= 5;
+    if (!compatible) { S.data = null; throw new Error('后台桥仍为 ' + (data.version || '旧版本') + '。请运行项目目录中的 restart-bridge.cmd 重启本地桥，然后点击“重试”；不需要退出 Antigravity。'); }
     S.data = data;
     choose(select && S.data.providers.some(p => p.id === select) ? select : S.data.active_provider_id || S.data.providers[0]?.id || ''); render();
   }

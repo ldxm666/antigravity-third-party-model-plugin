@@ -1,6 +1,6 @@
 {
   "name": "agy-bridge-core",
-  "version": "1.5.7",
+  "version": "1.0.0",
   "private": true,
   "description": "Antigravity / Cloud Code Assist (v1internal) -> third-party provider protocol bridge",
   "type": "module",

@@ -591,6 +591,7 @@ async function handle_api(req, res, state, url) {
       const cfg = state.config;
       send(200, {
         version: APP_VERSION,
+        native_settings_api: 1,
         port: state.port,
         active_provider_id: cfg.active_provider_id,
         default_model: cfg.default_model,

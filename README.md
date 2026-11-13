@@ -6,7 +6,7 @@
 
   <p>
     <a href="https://github.com/ldxm666/antigravity-third-party-model-plugin/releases"><img alt="release" src="https://img.shields.io/github/v/release/ldxm666/antigravity-third-party-model-plugin?color=2563eb"></a>
-    <a href="#开发与验证"><img alt="275 local checks passed" src="https://img.shields.io/badge/local_checks-275_passed-15803d"></a>
+    <a href="#开发与验证"><img alt="276 local checks passed" src="https://img.shields.io/badge/local_checks-276_passed-15803d"></a>
     <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-2563eb">
     <img alt="Node.js 24.5 or newer" src="https://img.shields.io/badge/Node.js-%E2%89%A524.5-3c873a">
     <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-64748b"></a>
@@ -32,9 +32,9 @@
 | 添加、删除或调整模型 | **保存后热刷新**，日常修改无需重启应用 |
 | 确认当前请求卡在哪一段 | 聊天输入区的**真实传输状态**：供应商、等待上游、思考 / 正文、工具参数接收量 |
 
-本地开发中的 v1.5.6 参考了 [DeepSeek Harness 的流适配器](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/llm/llm-pi-ai/src/stream.ts) 和 [pi-ai 的 OpenAI 适配器](https://github.com/earendil-works/pi/blob/main/packages/ai/src/api/openai-completions.ts)，补齐思考字段识别和流终止检查。状态行只反映真实传输阶段，不会填充虚构思考或提前执行工具。上游在生成结束后才集中发数据时，本地桥无法提前拿到尚未返回的内容；该问题仍在排查，不能把本地流测试通过当作真实中转首字延迟已修复。正式下载包当前仍为 v1.5.4。
+**正式版本：v1.0.0。** 本版整合前期开发中的原生接入、流式兼容和认证隔离修复，正式发行从 1.0.0 统一编号；已有提供商配置继续沿用。
 
-本地 v1.5.7 修复第三方 401/403 被误判为 Google 登录过期的问题：提供商密钥、权限或账户池失败现在显示为第三方服务错误，不再触发 Google 重新登录。Google 自身的真实认证失败仍原样保留。旧版本若出现登录提示，应先核对错误是否来自第三方端点，避免把供应商账户池不可用当作 Google 会话过期。
+第三方 401/403 已与 Google 登录隔离：提供商密钥、权限或账户池失败会显示为第三方服务错误，不再误触发 Google 重新登录。Google 自身的真实认证失败仍原样保留。
 
 ## 看看实际效果
 
@@ -69,12 +69,12 @@
 
 ### 1. 下载一键包
 
-从 [Releases](https://github.com/ldxm666/antigravity-third-party-model-plugin/releases/latest) 下载 **`antigravity-third-party-model-plugin-v1.5.4-windows-x64.zip`**，完整解压到普通目录。不要在 ZIP 预览中直接运行。
+从 [v1.0.0 Release](https://github.com/ldxm666/antigravity-third-party-model-plugin/releases/tag/v1.0.0) 下载 **`antigravity-third-party-model-plugin-v1.0.0-windows-x64.zip`**，完整解压到普通目录。不要在 ZIP 预览中直接运行。
 
 可选校验：将 ZIP 与同版本 `SHA256SUMS.txt` 放在一起，在 PowerShell 执行：
 
 ```powershell
-Get-FileHash .\antigravity-third-party-model-plugin-v1.5.4-windows-x64.zip -Algorithm SHA256
+Get-FileHash .\antigravity-third-party-model-plugin-v1.0.0-windows-x64.zip -Algorithm SHA256
 ```
 
 ### 2. 双击安装
@@ -85,6 +85,8 @@ Get-FileHash .\antigravity-third-party-model-plugin-v1.5.4-windows-x64.zip -Algo
 - 安装到 `%LOCALAPPDATA%\Programs\agy-bridge`，配置隐藏自启与诊断入口。
 - 备份并更新本机 Antigravity 接入文件，保留已有提供商配置。
 - 首次接入后，从托盘完全退出 Antigravity，再正常打开 **一次**。
+
+从前期开发版升级时，使用同一安装目录运行新包，保留提供商配置；按 [升级说明](docs/QUICKSTART.md#从前期开发版升级到-100) 重启后台并重新打开应用一次，确保后台与原生页面加载同一版。
 
 首次安装需要联网访问 Node.js/npm。安装器不自带 Antigravity，不会自动结束它的进程，也不会自动导入任何 API Key。自定义应用路径见 [完整教程](docs/QUICKSTART.md)。
 
@@ -106,11 +108,11 @@ Get-FileHash .\antigravity-third-party-model-plugin-v1.5.4-windows-x64.zip -Algo
 
 上下文按文本估算，超过本地配置限制会报错。原生第三方聊天以保存的最大输出为准，再受剩余上下文限制；直接调用 API 时也尊重请求中更小的显式上限。不会再让原生执行器遗留的 8192 默认值压低手动设置。自动配置采用端点信息、已核实能力表并显示来源，已有明确值不会在加载时被通用预填值覆盖。**填写更大的容量不会扩大上游模型能力。** 代理站对参数的支持可能不同，应以其实际响应为准。
 
-**最大输出必须严格小于上下文窗口**，为输入、历史消息和智能体指令保留空间。两者填成相同值会导致原生智能体在发送请求前终止；v1.5.3 在界面和保存 API 中均会拦截。自动配置遇到矛盾的端点容量会保留原始值并提示，需核对后再保存。
+**最大输出必须严格小于上下文窗口**，为输入、历史消息和智能体指令保留空间。两者填成相同值会导致原生智能体在发送请求前终止；设置界面和保存 API 均会拦截。自动配置遇到矛盾的端点容量会保留原始值并提示，需核对后再保存。
 
-从 v1.5.4 起，第三方模型的 API 失败会结束当前执行并显示原生错误和手动重试入口，避免一次上游超时后连续隐藏重试、界面始终显示“工作中”。这项策略不修改 Google 模型的重试行为，也不修改输出截断后的原生续写策略。生成首响应默认期限为 180 秒，流空闲期限为 120 秒；模型列表正常并不保证生成端点及时响应，插件也不能保证上游恢复。Gemini 原生协议同时保留思考签名与工具调用 ID。
+第三方模型的 API 失败会结束当前执行并显示原生错误和手动重试入口，避免一次上游超时后连续隐藏重试、界面始终显示“工作中”。这项策略不修改 Google 模型的重试行为，也不修改输出截断后的原生续写策略。生成首响应默认期限为 180 秒，流空闲期限为 120 秒；模型列表正常并不保证生成端点及时响应，插件也不能保证上游恢复。Gemini 原生协议同时保留思考签名与工具调用 ID。
 
-v1.5.6 保留 JSON 完整回复回退和 `[DONE]` 及时结束，补齐 `reasoning_text` 与可读的 `reasoning_details`。通用 OpenAI 中转使用标准 `reasoning_effort`，仅 Google 自身兼容端点启用 Google 的思考摘要扩展。工具参数必须完整、合法且流正常终止后才交给执行器；空预算截断和提前断流明确报错。日志只记录响应头、首字节、首段内容及转发时间等阶段，不记录生成正文。
+流适配参考 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/llm/llm-pi-ai/src/stream.ts) 和 [pi-ai](https://github.com/earendil-works/pi/blob/main/packages/ai/src/api/openai-completions.ts)，支持 JSON 完整回复回退、`[DONE]` 及时结束、`reasoning_text` 与可读的 `reasoning_details`。通用 OpenAI 中转使用标准 `reasoning_effort`，仅 Google 自身兼容端点启用 Google 的思考摘要扩展。工具参数必须完整、合法且流正常终止后才交给执行器；空预算截断和提前断流明确报错。日志只记录响应头、首字节、首段内容及转发时间等阶段，不记录生成正文。
 
 这不保证供应商首字速度：若日志只有 `relay_stream` 而没有 `upstream_headers`，上游尚未返回响应头；有 `upstream_bytes` 但没有 `forward_text` / `forward_thought` / `forward_tool_call` 时，需核对上游是否只发心跳或未完成的工具参数。聊天输入区会显示真实传输阶段。OpenAI 路由部分响应后失败的原生夹具现已验证：约 1 秒显示错误、仅 1 次请求，不再将干净 EOF 误判为可恢复的空回复。输出截断后的原生续写等其他恢复策略仍保留，不能宣称所有类型的重试都被关闭。
 
@@ -123,7 +125,7 @@ v1.5.6 保留 JSON 完整回复回退和 `[DONE]` 及时结束，补齐 `reasoni
 ## 隐私、升级与回滚
 
 - 提供商密钥在本机配置中 **明文保存**；不要把配置文件上传到仓库或 issue。
-- **v1.5.1 默认关闭原始请求抓取**。只有显式开启 `capture_requests` 才保存诊断请求正文。
+- **默认关闭原始请求抓取**。只有显式开启 `capture_requests` 才保存诊断请求正文。
 - 应用升级可能覆盖补丁，重新接入前先检查兼容性；首次主进程接入需重启一次，普通模型修改无需重启。
 - 运行安装目录中的 **`uninstall-keep-config.cmd`** 可回滚并保留配置；详见教程。不要把旧版本 asar 备份盲目恢复到另一个应用版本。
 
@@ -138,7 +140,9 @@ npm run test:installer   # Windows：独立临时 asar，不修改真实应用
 npm run build:release    # 生成 ZIP 与 SHA256SUMS.txt
 ```
 
-v1.5.7 本地通过 80 项单元 / HTTP / 界面逻辑检查、156 项协议检查和 39 项新配置回归（共 275 项），安装器隔离测试另行通过；v1.5.6 的 6 项隔离语言服务器启动检查也已通过。新增测试覆盖三种第三方协议的 401/403 与 Google 认证隔离。真实桌面夹具中首段文字、工具进度约 1 秒显示；修复后的第三方 401/403 不再弹登录过期。真实 TNT 分组调整后短回复约 10 秒成功；CJMS Argon 长任务仍曾在 180 秒无响应后失败。不能把短回复或隔离检查等同于所有长任务性能已改善。
+v1.0.0 的本地检查覆盖 81 项单元 / HTTP / 界面与发行兼容检查、156 项协议检查、39 项新配置回归（共 276 项），另有安装、升级和字节级回滚的隔离验证。覆盖三种第三方协议的 401/403 与 Google 认证隔离，并验证重新编号后原生设置页可正常加载。
+
+受控原生桌面夹具中首段文字与工具进度约 1 秒显示，第三方 401/403 不再弹登录过期；一次真实提供商的原生短回复约 11 秒完成。这些结果有明确环境范围：真实长任务也曾因上游 180 秒无响应而超时，不能据此承诺所有模型、线路或长任务的首字速度。
 
 真实桌面界面也做过多选保存、原生菜单和自动配置验证；截图中的容量来自受控示例端点，并不代表模型的官方规格。仓库附有 [可选 GitHub Actions 模板](docs/ci/README.md)，当前未启用远程 CI；不会把本地测试标成远程运行成功。
 

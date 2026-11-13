@@ -10,7 +10,7 @@ Use the repository's **Security → Report a vulnerability** flow when available
 - Native settings IPC accepts only the existing Hub renderer, fixed loopback destinations, allowed routes/methods and bounded messages.
 - Provider keys are local **plaintext** configuration in `%LOCALAPPDATA%\agy-bridge\config.json`. API/UI responses mask them. An empty key on edit preserves its existing value.
 - Google OAuth headers are forwarded only to the fixed Google control-plane host. Third-party providers receive their own configured key.
-- Raw request capture is **off by default** in v1.5.1. Opting into `capture_requests: true` writes recent prompt bodies to local `captures/`; disable it again and remove captures after debugging.
+- Raw request capture is **off by default**. Opting into `capture_requests: true` writes recent prompt bodies to local `captures/`; disable it again and remove captures after debugging.
 - Short-lived read-only Google response caching never turns a 401, 403 or 429 into success. The bridge does not manufacture login identities, plans or quotas.
 
 ## Safe installation and credentials
