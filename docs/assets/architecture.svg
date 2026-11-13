@@ -2,17 +2,17 @@
   <rect width="920" height="270" rx="16" fill="#f8fafc"/>
   <g font-family="Segoe UI,Arial,sans-serif" text-anchor="middle">
     <rect x="30" y="88" width="220" height="94" rx="12" fill="#fff" stroke="#cbd5e1"/>
-    <text x="140" y="124" font-size="19" font-weight="600" fill="#0f172a">Antigravity Hub</text>
-    <text x="140" y="151" font-size="13" fill="#64748b">Native settings + model menu</text>
+    <text x="140" y="124" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#0f172a">Antigravity Hub</text>
+    <text x="140" y="151" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="13" fill="#64748b">Native settings + model menu</text>
     <rect x="340" y="88" width="225" height="94" rx="12" fill="#eaf1ff" stroke="#2563eb"/>
-    <text x="452" y="124" font-size="19" font-weight="600" fill="#1d4ed8">Local bridge</text>
-    <text x="452" y="151" font-size="13" fill="#475569">127.0.0.1:18925</text>
+    <text x="452" y="124" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#1d4ed8">Local bridge</text>
+    <text x="452" y="151" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="13" fill="#475569">127.0.0.1:18925</text>
     <rect x="665" y="28" width="225" height="88" rx="12" fill="#fff" stroke="#cbd5e1"/>
-    <text x="777" y="63" font-size="17" font-weight="600" fill="#0f172a">Google control plane</text>
-    <text x="777" y="88" font-size="13" fill="#64748b">Real login / account / quota</text>
+    <text x="777" y="63" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" font-weight="600" fill="#0f172a">Google control plane</text>
+    <text x="777" y="88" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="13" fill="#64748b">Real login / account / quota</text>
     <rect x="665" y="154" width="225" height="88" rx="12" fill="#fff" stroke="#cbd5e1"/>
-    <text x="777" y="189" font-size="17" font-weight="600" fill="#0f172a">Your API provider</text>
-    <text x="777" y="214" font-size="13" fill="#64748b">Its own key / model / limits</text>
+    <text x="777" y="189" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" font-weight="600" fill="#0f172a">Your API provider</text>
+    <text x="777" y="214" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="13" fill="#64748b">Its own key / model / limits</text>
   </g>
   <g fill="none" stroke="#64748b" stroke-width="2"><path d="M250 135H328M320 129l8 6-8 6"/><path d="M565 117H610V72H653M645 66l8 6-8 6"/><path d="M565 153H610V198H653M645 192l8 6-8 6"/></g>
 </svg>
