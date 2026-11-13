@@ -9,7 +9,7 @@ import os from 'node:os';
 import crypto from 'node:crypto';
 import { EFFORT_KEYS, model_efforts, default_effort } from './model-schema.js';
 
-export const APP_VERSION = '1.5.1';
+export const APP_VERSION = '1.5.2';
 export const DEFAULT_PORT = 18925;
 export const PROVIDER_KINDS = ['openai', 'anthropic', 'gemini'];
 export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'];

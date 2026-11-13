@@ -1,6 +1,8 @@
-# AGY Bridge
+# Antigravity Third-Party Model Plugin
 
-[中文](../README.md) · [Releases](https://github.com/ldxm666/antigravity-provider-bridge/releases)
+**Antigravity 第三方模型插件**
+
+[中文](../README.md) · [Releases](https://github.com/ldxm666/antigravity-third-party-model-plugin/releases)
 
 Native third-party provider settings and configurable reasoning menus for **Antigravity Hub 2.31.2 on Windows x64**. This independent community project requires a working Google login and your own authorized provider API access. It does not fabricate identities, subscriptions or quotas.
 

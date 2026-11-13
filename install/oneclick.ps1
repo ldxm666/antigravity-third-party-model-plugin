@@ -56,7 +56,7 @@ function Resolve-Node {
   }
 }
 
-Write-Host 'AGY Bridge - install' -ForegroundColor Cyan
+Write-Host 'Antigravity Third-Party Model Plugin - install' -ForegroundColor Cyan
 Write-Host "Install: $destination"
 New-Item -ItemType Directory -Path $destination -Force | Out-Null
 if ($destination.TrimEnd('\') -ne $source.TrimEnd('\')) {

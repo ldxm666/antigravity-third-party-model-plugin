@@ -1,7 +1,7 @@
 {
-  "name": "antigravity-provider-bridge",
-  "version": "1.5.1",
-  "description": "Native provider settings and configurable reasoning menus for Antigravity Hub on Windows.",
+  "name": "antigravity-third-party-model-plugin",
+  "version": "1.5.2",
+  "description": "Antigravity 第三方模型插件 / Antigravity Third-Party Model Plugin — native providers and configurable reasoning for Windows.",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -9,10 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ldxm666/antigravity-provider-bridge.git"
+    "url": "https://github.com/ldxm666/antigravity-third-party-model-plugin.git"
   },
   "bugs": {
-    "url": "https://github.com/ldxm666/antigravity-provider-bridge/issues"
+    "url": "https://github.com/ldxm666/antigravity-third-party-model-plugin/issues"
   },
   "scripts": {
     "test": "node --test test/model-capabilities.test.mjs test/model-settings.test.mjs test/passthrough.test.mjs test/provider-timeouts.test.mjs && node core/selftest.mjs && node core/livetest.mjs",

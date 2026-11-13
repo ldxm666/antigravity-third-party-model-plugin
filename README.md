@@ -1,11 +1,11 @@
 <div align="center">
-  <img src="docs/assets/banner.svg" alt="AGY Bridge — native providers, your models" width="880">
+  <img src="docs/assets/banner.svg" alt="Antigravity 第三方模型插件 / Antigravity Third-Party Model Plugin" width="880">
 
   <p><strong>把第三方模型接入 Antigravity，操作留在原生界面里。</strong></p>
   <p>提供商设置 · 自选思考档位 · 模型配置发现 · 保存即刷新</p>
 
   <p>
-    <a href="https://github.com/ldxm666/antigravity-provider-bridge/releases"><img alt="release" src="https://img.shields.io/github/v/release/ldxm666/antigravity-provider-bridge?color=2563eb"></a>
+    <a href="https://github.com/ldxm666/antigravity-third-party-model-plugin/releases"><img alt="release" src="https://img.shields.io/github/v/release/ldxm666/antigravity-third-party-model-plugin?color=2563eb"></a>
     <a href="#开发与验证"><img alt="231 local checks passed" src="https://img.shields.io/badge/local_checks-231_passed-15803d"></a>
     <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-2563eb">
     <img alt="Node.js 24.5 or newer" src="https://img.shields.io/badge/Node.js-%E2%89%A524.5-3c873a">
@@ -20,7 +20,7 @@
 
 ## 为什么做这个
 
-配置第三方模型，不应该在聊天、外部网页和独立悬浮窗之间来回切换。AGY Bridge 把提供商管理放进原有设置页，把推理强度放进原生模型菜单；后台负责协议转换、模型身份隔离与参数限制。
+配置第三方模型，不应该在聊天、外部网页和独立悬浮窗之间来回切换。Antigravity 第三方模型插件（Antigravity Third-Party Model Plugin）把提供商管理放进原有设置页，把推理强度放进原生模型菜单；后台负责协议转换、模型身份隔离与参数限制。
 
 | 你要做的事 | 在这里完成 |
 |---|---|
@@ -64,12 +64,12 @@
 
 ### 1. 下载一键包
 
-从 [Releases](https://github.com/ldxm666/antigravity-provider-bridge/releases/latest) 下载 **`agy-bridge-v1.5.1-windows-x64.zip`**，完整解压到普通目录。不要在 ZIP 预览中直接运行。
+从 [Releases](https://github.com/ldxm666/antigravity-third-party-model-plugin/releases/latest) 下载 **`antigravity-third-party-model-plugin-v1.5.2-windows-x64.zip`**，完整解压到普通目录。不要在 ZIP 预览中直接运行。
 
 可选校验：将 ZIP 与同版本 `SHA256SUMS.txt` 放在一起，在 PowerShell 执行：
 
 ```powershell
-Get-FileHash .\agy-bridge-v1.5.1-windows-x64.zip -Algorithm SHA256
+Get-FileHash .\antigravity-third-party-model-plugin-v1.5.2-windows-x64.zip -Algorithm SHA256
 ```
 
 ### 2. 双击安装
@@ -125,13 +125,13 @@ npm run test:installer   # Windows：独立临时 asar，不修改真实应用
 npm run build:release    # 生成 ZIP 与 SHA256SUMS.txt
 ```
 
-v1.5.1 本地通过 36 项单元 / HTTP 集成检查、156 项协议检查和 39 项新配置回归，安装器隔离测试另行通过。测试覆盖模型集合、非标准思考档位、配置迁移、容量约束、端点优先级、草稿不落盘、密钥保留、Google 控制面错误及生成超时，不需要真实账号或提供商密钥。
+v1.5.2 本地通过 36 项单元 / HTTP 集成检查、156 项协议检查和 39 项新配置回归，安装器隔离测试另行通过。测试覆盖模型集合、非标准思考档位、配置迁移、容量约束、端点优先级、草稿不落盘、密钥保留、Google 控制面错误及生成超时，不需要真实账号或提供商密钥。
 
 真实桌面界面也做过多选保存、原生菜单和自动配置验证；截图中的容量来自受控示例端点，并不代表模型的官方规格。仓库附有 [可选 GitHub Actions 模板](docs/ci/README.md)，当前未启用远程 CI；不会把本地测试标成远程运行成功。
 
 ## 参与与致谢
 
-欢迎带着复现步骤和脱敏信息提交 [Issue](https://github.com/ldxm666/antigravity-provider-bridge/issues)，或阅读 [贡献指南](CONTRIBUTING.md) 后提交改进。请勿上传账号文件、密钥、完整聊天抓包或应用二进制。
+欢迎带着复现步骤和脱敏信息提交 [Issue](https://github.com/ldxm666/antigravity-third-party-model-plugin/issues)，或阅读 [贡献指南](CONTRIBUTING.md) 后提交改进。请勿上传账号文件、密钥、完整聊天抓包或应用二进制。
 
 本地协议桥思路参考 [Cute-chen/agy-bridge](https://github.com/Cute-chen/agy-bridge)。本项目针对 Windows Hub 扩展原生页面、真实控制面透传与可配置档位。第三方说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 

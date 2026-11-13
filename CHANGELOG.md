@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.2 — 2026-11-13
+
+Branding and documentation release.
+
+- Rename the public project to **Antigravity 第三方模型插件 / Antigravity Third-Party Model Plugin**.
+- Update the repository address, bilingual banner, README, package metadata and download filename.
+- Keep the existing provider configuration paths and runtime behavior.
+
 ## 1.5.1 — 2026-11-13
 
 First public Windows release.
